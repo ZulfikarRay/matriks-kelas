@@ -131,21 +131,21 @@ export default function DosenProfilePage() {
         {/* Identity summary widgets */}
         <div style={styles.statsRow}>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#EDEBFF', color: '#5B4FE0' }}>🪪</div>
+            <div style={{ ...styles.statIcon, background: '#E3F5EA', color: '#1B7A43' }}>🪪</div>
             <div>
               <div style={styles.statNumber}>{dosen?.f_nidn || '-'}</div>
               <div style={styles.statLabel}>NIDN</div>
             </div>
           </div>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#FFEEDD', color: '#FF7A00' }}>🧾</div>
+            <div style={{ ...styles.statIcon, background: '#D7F0E1', color: '#146C39' }}>🧾</div>
             <div>
               <div style={styles.statNumber}>{dosen?.f_nip || '-'}</div>
               <div style={styles.statLabel}>NIP</div>
             </div>
           </div>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: jkIsMale ? '#E7EEFF' : jkIsFemale ? '#FDE8F1' : '#F3F5FA', color: jkIsMale ? '#3E5EF0' : jkIsFemale ? '#E0448A' : '#8A96AD' }}>
+            <div style={{ ...styles.statIcon, background: jkIsMale ? '#E3F5EA' : jkIsFemale ? '#FDE8F1' : '#F3F5FA', color: jkIsMale ? '#1B7A43' : jkIsFemale ? '#E0448A' : '#8A96AD' }}>
               {jkIsMale ? '♂' : jkIsFemale ? '♀' : '—'}
             </div>
             <div>
@@ -248,9 +248,9 @@ export default function DosenProfilePage() {
 }
 
 // ── Edumy-inspired design tokens (matches DosenPage) ────────────
-// Primary: #FF7A00 (Edumy signature orange)
+// Primary: #1B7A43 (dark green)
 // Ink/navy: #1E2A45 · Muted text: #8A96AD · Background: #F3F5FA
-// Accents: indigo #3E5EF0, pink #E0448A, teal #12B886
+// Accents: pink #E0448A, teal #12B886
 
 const styles = {
 
@@ -286,7 +286,7 @@ const styles = {
     margin: '0 0.25rem',
   },
   breadcrumbActive: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '600',
   },
   title: {
@@ -306,11 +306,11 @@ const styles = {
     width: '56px',
     height: '56px',
     borderRadius: '16px',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(255,122,0,0.28)',
+    boxShadow: '0 8px 20px rgba(27,122,67,0.28)',
   },
   headerIcon: {
     fontSize: '1.6rem',
@@ -385,7 +385,7 @@ const styles = {
   loading: {
     textAlign: 'center',
     padding: '3rem',
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontSize: '1rem',
     fontWeight: '600',
   },
@@ -403,7 +403,7 @@ const styles = {
     width: '60px',
     height: '60px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     display: 'flex',
     alignItems: 'center',
@@ -411,7 +411,7 @@ const styles = {
     fontSize: '1.4rem',
     fontWeight: '700',
     fontFamily: "'Poppins', sans-serif",
-    boxShadow: '0 8px 20px rgba(255,122,0,0.28)',
+    boxShadow: '0 8px 20px rgba(27,122,67,0.28)',
     flexShrink: 0,
   },
   nameBannerName: {
@@ -466,8 +466,8 @@ const styles = {
 
   // ── Data badges (pill style, matches DosenPage) ─────────────
   badgeCode: {
-    backgroundColor: '#EDEBFF',
-    color: '#5B4FE0',
+    backgroundColor: '#E3F5EA',
+    color: '#1B7A43',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',
@@ -488,8 +488,8 @@ const styles = {
     width: 'fit-content',
   },
   badgeMale: {
-    backgroundColor: '#E7EEFF',
-    color: '#3E5EF0',
+    backgroundColor: '#D7F0E1',
+    color: '#146C39',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',

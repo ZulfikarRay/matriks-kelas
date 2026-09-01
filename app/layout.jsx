@@ -121,7 +121,7 @@ const styles = {
   },
   contentWrapper: {
     flex: 1,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #3FA96B 0%, #1B7A43 100%)',
     padding: '0',
   },
 };

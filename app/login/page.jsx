@@ -312,7 +312,7 @@ const styles = {
     width: '56px',
     height: '56px',
     borderRadius: '16px',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -333,7 +333,7 @@ const styles = {
     margin: '0 0.25rem',
   },
   breadcrumbActive: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '600',
   },
   title: {
@@ -387,7 +387,7 @@ const styles = {
   roleButtonActive: {
     flex: 1,
     padding: '0.65rem 1rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: '1.5px solid transparent',
     borderRadius: '999px',
@@ -428,7 +428,7 @@ const styles = {
   // ── Buttons ─────────────────────────────────────────────
   btnPrimary: {
     padding: '0.75rem 1.35rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
@@ -511,7 +511,7 @@ const styles = {
     marginBottom: '0.75rem',
   },
   loadingText: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontSize: '1rem',
     fontWeight: '600',
     margin: 0,

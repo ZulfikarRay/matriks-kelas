@@ -532,17 +532,17 @@ export default function KelasPage() {
       }
 
       input:hover, select:hover, textarea:hover {
-        border-color: #FF7A00 !important;
+        border-color: #1B7A43 !important;
       }
 
       input:focus, select:focus, textarea:focus {
         outline: none;
-        border-color: #FF7A00 !important;
-        box-shadow: 0 0 0 3px rgba(255,122,0,0.14) !important;
+        border-color: #1B7A43 !important;
+        box-shadow: 0 0 0 3px rgba(27,122,67,0.14) !important;
       }
 
       tr.edumy-row:hover {
-        background-color: #FFF6EC !important;
+        background-color: #EAF7EF !important;
       }
 
       ::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -572,14 +572,14 @@ export default function KelasPage() {
         {/* Stat widgets */}
         <div style={styles.statsRow}>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#FFEEDD', color: '#FF7A00' }}>📖</div>
+            <div style={{ ...styles.statIcon, background: '#E3F5EA', color: '#1B7A43' }}>📖</div>
             <div>
               <div style={styles.statNumber}>{totalMatkul}</div>
               <div style={styles.statLabel}>Mata Kuliah</div>
             </div>
           </div>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#EDEBFF', color: '#5B4FE0' }}>🏷️</div>
+            <div style={{ ...styles.statIcon, background: '#D7F0E1', color: '#146C39' }}>🏷️</div>
             <div>
               <div style={styles.statNumber}>{totalKelas}</div>
               <div style={styles.statLabel}>Total Kelas</div>
@@ -826,7 +826,7 @@ export default function KelasPage() {
 
                                 {isExpanded && (
                                   <tr>
-                                    <td colSpan="6" style={{ ...styles.td, padding: '1.5rem', background: '#FFF6EC' }}>
+                                    <td colSpan="6" style={{ ...styles.td, padding: '1.5rem', background: '#EAF7EF' }}>
                                       <div style={styles.expandedContent}>
                                         <h3 style={styles.expandedTitle}>📚 Detail Kelas ({group.classes.length})</h3>
 
@@ -1197,24 +1197,24 @@ export default function KelasPage() {
                       <strong>⚙️ Preferensi Dosen</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem', marginTop: '0.75rem' }}>
                         <div>
-                          <span style={{ color: '#C15A00', fontWeight: '500' }}>Lantai:</span>
-                          <p style={{ margin: '0.25rem 0 0 0', color: '#A85400' }}>{editingKelas.prefer_lantai || '—'}</p>
+                          <span style={{ color: '#146C39', fontWeight: '500' }}>Lantai:</span>
+                          <p style={{ margin: '0.25rem 0 0 0', color: '#12592F' }}>{editingKelas.prefer_lantai || '—'}</p>
                         </div>
                         <div>
-                          <span style={{ color: '#C15A00', fontWeight: '500' }}>Hari Diinginkan:</span>
-                          <p style={{ margin: '0.25rem 0 0 0', color: '#A85400' }}>{editingKelas.prefer_hari || '—'}</p>
+                          <span style={{ color: '#146C39', fontWeight: '500' }}>Hari Diinginkan:</span>
+                          <p style={{ margin: '0.25rem 0 0 0', color: '#12592F' }}>{editingKelas.prefer_hari || '—'}</p>
                         </div>
                         <div>
-                          <span style={{ color: '#C15A00', fontWeight: '500' }}>Hari Dihindari:</span>
-                          <p style={{ margin: '0.25rem 0 0 0', color: '#A85400' }}>{editingKelas.avoid_hari || '—'}</p>
+                          <span style={{ color: '#146C39', fontWeight: '500' }}>Hari Dihindari:</span>
+                          <p style={{ margin: '0.25rem 0 0 0', color: '#12592F' }}>{editingKelas.avoid_hari || '—'}</p>
                         </div>
                         <div>
-                          <span style={{ color: '#C15A00', fontWeight: '500' }}>Jam Mulai:</span>
-                          <p style={{ margin: '0.25rem 0 0 0', color: '#A85400' }}>{editingKelas.prefer_jam_mulai || '—'}</p>
+                          <span style={{ color: '#146C39', fontWeight: '500' }}>Jam Mulai:</span>
+                          <p style={{ margin: '0.25rem 0 0 0', color: '#12592F' }}>{editingKelas.prefer_jam_mulai || '—'}</p>
                         </div>
                         <div style={{ gridColumn: '1 / -1' }}>
-                          <span style={{ color: '#C15A00', fontWeight: '500' }}>Jam Selesai:</span>
-                          <p style={{ margin: '0.25rem 0 0 0', color: '#A85400' }}>{editingKelas.prefer_jam_selesai || '—'}</p>
+                          <span style={{ color: '#146C39', fontWeight: '500' }}>Jam Selesai:</span>
+                          <p style={{ margin: '0.25rem 0 0 0', color: '#12592F' }}>{editingKelas.prefer_jam_selesai || '—'}</p>
                         </div>
                       </div>
                     </div>
@@ -1245,9 +1245,9 @@ export default function KelasPage() {
 
 
 // ── Edumy-inspired design tokens (shared with DosenPage) ──────
-// Primary: #FF7A00 (Edumy signature orange)
+// Primary: #1B7A43 (dark green)
 // Ink/navy: #1E2A45 · Muted text: #8A96AD · Background: #F3F5FA
-// Accents: indigo #3E5EF0, pink #E0448A, teal #12B886
+// Accents: pink #E0448A, teal #12B886
 
 const styles = {
 
@@ -1284,7 +1284,7 @@ const styles = {
     margin: '0 0.25rem',
   },
   breadcrumbActive: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '600',
   },
   title: {
@@ -1304,11 +1304,11 @@ const styles = {
     width: '56px',
     height: '56px',
     borderRadius: '16px',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(255,122,0,0.28)',
+    boxShadow: '0 8px 20px rgba(27,122,67,0.28)',
   },
   headerIcon: {
     fontSize: '1.6rem',
@@ -1368,15 +1368,15 @@ const styles = {
   masterFilter: {
     marginBottom: '1.25rem',
     padding: '1.1rem 1.25rem',
-    backgroundColor: '#FFF6EC',
+    backgroundColor: '#EAF7EF',
     borderRadius: '14px',
-    borderLeft: '4px solid #FF7A00',
+    borderLeft: '4px solid #1B7A43',
   },
   filterLabel: {
     display: 'block',
     marginBottom: '0.6rem',
     fontWeight: '600',
-    color: '#C15A00',
+    color: '#12592F',
     fontSize: '0.85rem',
   },
 
@@ -1409,10 +1409,10 @@ const styles = {
     transition: 'all 0.2s',
   },
   toggleButtonActive: {
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
-    borderColor: '#FF7A00',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.3)',
+    borderColor: '#1B7A43',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.3)',
   },
   toggleButtonInactive: {
     backgroundColor: 'white',
@@ -1436,26 +1436,26 @@ const styles = {
   // ── Buttons (Edumy pill style) ──────────────────────────────
   btnPrimary: {
     padding: '0.6rem 1.35rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.85rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.35)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.35)',
     transition: 'opacity 0.2s, transform 0.1s',
   },
   btnPrimarySmall: {
     padding: '0.5rem 1.1rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.8rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.3)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.3)',
   },
   btnOutlineTeal: {
     padding: '0.6rem 1.35rem',
@@ -1546,11 +1546,11 @@ const styles = {
     transition: 'background-color 0.15s',
   },
   dropdownItemActive: {
-    backgroundColor: '#FFF6EC',
+    backgroundColor: '#EAF7EF',
   },
   dropdownTitle: {
     fontWeight: '700',
-    color: '#C15A00',
+    color: '#146C39',
     fontSize: '0.875rem',
   },
   dropdownSubtitle: {
@@ -1586,24 +1586,24 @@ const styles = {
   noticeWarning: {
     padding: '0.9rem 1.1rem',
     marginBottom: '1.5rem',
-    backgroundColor: '#FFF6EC',
-    borderLeft: '4px solid #FF7A00',
+    backgroundColor: '#EAF7EF',
+    borderLeft: '4px solid #1B7A43',
     borderRadius: '10px',
     fontSize: '0.9rem',
-    color: '#C15A00',
+    color: '#12592F',
   },
 
   // ── Selected item info bar ────────────────────────────────
   selectedInfo: {
-    backgroundColor: '#FFF6EC',
+    backgroundColor: '#EAF7EF',
     padding: '1rem 1.25rem',
     borderRadius: '14px',
     marginBottom: '1.5rem',
-    borderLeft: '4px solid #FF7A00',
+    borderLeft: '4px solid #1B7A43',
     color: '#1E2A45',
   },
   infoBadge: {
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     padding: '0.25rem 0.85rem',
     borderRadius: '999px',
@@ -1634,8 +1634,8 @@ const styles = {
     fontFamily: "'Poppins', sans-serif",
   },
   badgeCount: {
-    backgroundColor: '#FFEEDD',
-    color: '#C15A00',
+    backgroundColor: '#E3F5EA',
+    color: '#146C39',
     padding: '0.3rem 0.9rem',
     borderRadius: '999px',
     fontSize: '0.78rem',
@@ -1687,7 +1687,7 @@ const styles = {
     borderBottom: '1px solid #EEF1F8',
   },
   sortIcon: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '700',
   },
   thAksi: {
@@ -1719,8 +1719,8 @@ const styles = {
 
   // ── Data badges (pill style) ────────────────────────────────
   badgeCode: {
-    backgroundColor: '#EDEBFF',
-    color: '#5B4FE0',
+    backgroundColor: '#E3F5EA',
+    color: '#1B7A43',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',
@@ -1739,8 +1739,8 @@ const styles = {
     display: 'inline-block',
   },
   badgeSemester: {
-    backgroundColor: '#E7EEFF',
-    color: '#3E5EF0',
+    backgroundColor: '#D7F0E1',
+    color: '#146C39',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',
@@ -1749,8 +1749,8 @@ const styles = {
   },
   classBadge: {
     marginLeft: '0.65rem',
-    backgroundColor: '#FFEEDD',
-    color: '#C15A00',
+    backgroundColor: '#D7F0E1',
+    color: '#146C39',
     padding: '0.15rem 0.65rem',
     borderRadius: '999px',
     fontSize: '0.75rem',
@@ -1758,7 +1758,7 @@ const styles = {
     display: 'inline-block',
   },
   badgeKelas: {
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
@@ -1769,12 +1769,12 @@ const styles = {
 
   // ── Row action icon-buttons ────────────────────────────────
   btnExpand: {
-    background: '#FFEEDD',
+    background: '#D7F0E1',
     border: 'none',
     cursor: 'pointer',
     fontSize: '0.85rem',
     padding: '0.3rem 0.5rem',
-    color: '#C15A00',
+    color: '#146C39',
     fontWeight: '700',
     transition: 'background 0.2s',
     width: '30px',
@@ -1785,7 +1785,7 @@ const styles = {
     borderRadius: '10px',
   },
   btnIconInfo: {
-    background: '#FFEEDD',
+    background: '#D7F0E1',
     border: 'none',
     fontSize: '0.95rem',
     cursor: 'pointer',
@@ -1793,7 +1793,7 @@ const styles = {
     borderRadius: '10px',
     transition: 'background 0.2s',
     marginRight: '0.4rem',
-    color: '#C15A00',
+    color: '#146C39',
   },
   btnIconDanger: {
     background: '#FDEBEE',
@@ -1814,7 +1814,7 @@ const styles = {
     margin: '0 0 0.75rem 0',
     fontSize: '0.95rem',
     fontWeight: '700',
-    color: '#C15A00',
+    color: '#146C39',
     fontFamily: "'Poppins', sans-serif",
   },
   classesTable: {
@@ -1849,13 +1849,13 @@ const styles = {
 
   // ── Preset / preference info block ─────────────────────────
   presetInfo: {
-    backgroundColor: '#FFF6EC',
+    backgroundColor: '#EAF7EF',
     padding: '1rem 1.25rem',
     borderRadius: '14px',
     marginBottom: '1.25rem',
     fontSize: '0.9rem',
-    color: '#A85400',
-    borderLeft: '4px solid #FF7A00',
+    color: '#12592F',
+    borderLeft: '4px solid #1B7A43',
     fontWeight: '500',
   },
 
@@ -1955,14 +1955,14 @@ const styles = {
   },
   btnClose: {
     padding: '0.6rem 1.6rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.9rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.3)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.3)',
     transition: 'opacity 0.2s',
   },
 };

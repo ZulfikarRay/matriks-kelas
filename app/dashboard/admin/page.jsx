@@ -20,8 +20,8 @@ export default function DashboardHome() {
       label: 'Dosen',
       href: '/dashboard/admin/dosen',
       desc: 'Kelola biodata, preferensi jadwal, dan impor data dosen.',
-      iconBg: '#FFEEDD',
-      iconColor: '#FF7A00',
+      iconBg: '#E3F5EA',
+      iconColor: '#1B7A43',
     },
     {
       id: 'kurikulum',
@@ -29,8 +29,8 @@ export default function DashboardHome() {
       label: 'Kurikulum',
       href: '/dashboard/admin/kurikulum',
       desc: 'Susun dan kelola struktur kurikulum program studi.',
-      iconBg: '#E7EEFF',
-      iconColor: '#3E5EF0',
+      iconBg: '#D7F0E1',
+      iconColor: '#146C39',
     },
     {
       id: 'ruangan',
@@ -56,8 +56,8 @@ export default function DashboardHome() {
       label: 'Jadwal',
       href: '/dashboard/admin/jadwal',
       desc: 'Susun preset dan generate jadwal perkuliahan otomatis.',
-      iconBg: '#EDEBFF',
-      iconColor: '#5B4FE0',
+      iconBg: '#E3F5EA',
+      iconColor: '#1B7A43',
     },
   ];
 
@@ -77,7 +77,7 @@ export default function DashboardHome() {
       .edumy-menu-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 28px rgba(30,42,69,0.10);
-        border-color: #FFDBA8;
+        border-color: #BEE7CC;
       }
       .edumy-menu-card:active {
         transform: translateY(-1px);
@@ -137,9 +137,9 @@ export default function DashboardHome() {
 }
 
 // ── Edumy-inspired design tokens (shared with DosenPage) ──────
-// Primary: #FF7A00 (Edumy signature orange)
+// Primary: #1B7A43 (dark green)
 // Ink/navy: #1E2A45 · Muted text: #8A96AD · Background: #F3F5FA
-// Accents: indigo #3E5EF0, pink #E0448A, teal #12B886, purple #5B4FE0
+// Accents: pink #E0448A, teal #12B886
 
 const styles = {
 
@@ -176,7 +176,7 @@ const styles = {
     margin: '0 0.25rem',
   },
   breadcrumbActive: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '600',
   },
   title: {
@@ -196,11 +196,11 @@ const styles = {
     width: '56px',
     height: '56px',
     borderRadius: '16px',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(255,122,0,0.28)',
+    boxShadow: '0 8px 20px rgba(27,122,67,0.28)',
   },
   headerIcon: {
     fontSize: '1.6rem',
@@ -230,8 +230,8 @@ const styles = {
     fontFamily: "'Poppins', sans-serif",
   },
   badgeCount: {
-    backgroundColor: '#FFEEDD',
-    color: '#C15A00',
+    backgroundColor: '#E3F5EA',
+    color: '#146C39',
     padding: '0.3rem 0.9rem',
     borderRadius: '999px',
     fontSize: '0.78rem',
@@ -294,7 +294,7 @@ const styles = {
   menuCardArrow: {
     fontSize: '0.8rem',
     fontWeight: '700',
-    color: '#FF7A00',
+    color: '#1B7A43',
     marginTop: '0.5rem',
   },
 };

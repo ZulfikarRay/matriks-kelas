@@ -209,8 +209,7 @@ export default function JadwalPage() {
       setRuanganList(ruangan);
       const organizedJadwal = {};
       days.forEach((day) => { organizedJadwal[day] = {}; });
-      jadwal.forEach((j) => { if (!organizedJadwal[j.hari]) organizedJadwal[j.hari] = {}; if (!organizedJadwal[j.hari][j.ruangan_id]) organizedJadwal[j.hari][j.ruangan_id] = []; organizedJadwal[j.hari][j.ruangan_id].push(j); });
-      setJadwalData(organizedJadwal);
+      jadwal.forEach((j) => { if (!organizedJadwal[j.hari]) organizedJadwal[j.hari] = {}; if (!organizedJadwal[j.hari][j.ruangan_id]) organizedJadwal[j.hari][j.ruangan_id] = []; organizedJadwal[j.hari][j.ruangan_id].push(j); }); setJadwalData(organizedJadwal);
     } catch (err) { console.warn('Error fetching filtered data:', err.message); } finally { setLoading(false); }
   };
 
@@ -240,13 +239,13 @@ export default function JadwalPage() {
       }
 
       input:hover, select:hover, textarea:hover {
-        border-color: #FF7A00 !important;
+        border-color: #1B7A43 !important;
       }
 
       input:focus, select:focus, textarea:focus {
         outline: none;
-        border-color: #FF7A00 !important;
-        box-shadow: 0 0 0 3px rgba(255,122,0,0.14) !important;
+        border-color: #1B7A43 !important;
+        box-shadow: 0 0 0 3px rgba(27,122,67,0.14) !important;
       }
 
       ::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -990,10 +989,10 @@ export default function JadwalPage() {
     titleBar: { padding: '2rem 2rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' },
     breadcrumb: { fontSize: '0.8rem', color: '#9AA5BC', fontWeight: '500', marginBottom: '0.5rem' },
     breadcrumbSep: { color: '#C7CEDD', margin: '0 0.25rem' },
-    breadcrumbActive: { color: '#FF7A00', fontWeight: '600' },
+    breadcrumbActive: { color: '#1B7A43', fontWeight: '600' },
     titleText: { fontSize: '1.9rem', fontWeight: 700, color: '#1E2A45', margin: 0, fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.01em' },
     titleSub: { fontSize: '0.9rem', color: '#8A96AD', margin: '0.35rem 0 0 0' },
-    headerIconWrap: { width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(255,122,0,0.28)' },
+    headerIconWrap: { width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #3FA96B, #1B7A43)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(27,122,67,0.28)' },
     headerIcon: { fontSize: '1.6rem' },
     // Cards
     card: { backgroundColor: 'white', borderRadius: '18px', boxShadow: '0 4px 22px rgba(30,42,69,0.06)', border: '1px solid #EEF1F8', marginBottom: '1.5rem', overflow: 'hidden' },
@@ -1010,18 +1009,18 @@ export default function JadwalPage() {
     // Labels
     label: { display: 'block', fontWeight: 600, fontSize: '0.78rem', color: '#5B6A88', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.4rem' },
     // Buttons (Edumy pill style)
-    btnPrimary: { padding: '0.6rem 1.35rem', background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(255,122,0,0.35)', transition: 'opacity 0.2s, transform 0.1s' },
+    btnPrimary: { padding: '0.6rem 1.35rem', background: 'linear-gradient(135deg, #3FA96B, #1B7A43)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(27,122,67,0.35)', transition: 'opacity 0.2s, transform 0.1s' },
     btnSuccess: { padding: '0.6rem 1.35rem', backgroundColor: '#E4F7F0', color: '#0E9B6E', border: '1px solid #C3EEDF', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s, transform 0.1s' },
-    btnPurple: { padding: '0.6rem 1.35rem', background: 'linear-gradient(135deg, #7C86FF, #5B4FE0)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(91,79,224,0.32)', transition: 'opacity 0.2s, transform 0.1s' },
-    btnAmber: { padding: '0.6rem 1.35rem', backgroundColor: '#FFEEDD', color: '#C15A00', border: '1px solid #FFDBA8', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s, transform 0.1s' },
+    btnPurple: { padding: '0.6rem 1.35rem', background: 'linear-gradient(135deg, #2FA365, #146C39)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 14px rgba(20,108,57,0.32)', transition: 'opacity 0.2s, transform 0.1s' },
+    btnAmber: { padding: '0.6rem 1.35rem', backgroundColor: '#D7F0E1', color: '#146C39', border: '1px solid #BEE7CC', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s, transform 0.1s' },
     btnGray: { padding: '0.6rem 1.35rem', backgroundColor: '#F3F5FA', color: '#5B6A88', border: '1px solid #E4E8F1', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' },
     btnGrayDisabled: { padding: '0.6rem 1.35rem', backgroundColor: '#F3F5FA', color: '#C2CADA', border: '1px solid #E4E8F1', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'not-allowed' },
     btnSavePreset: { padding: '0.55rem 1.1rem', backgroundColor: '#E4F7F0', color: '#0E9B6E', border: '1px solid #C3EEDF', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' },
-    btnPresetActive: { padding: '0.5rem 1.25rem', background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)', color: 'white', border: 'none', borderRadius: '999px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(255,122,0,0.3)', fontSize: '0.875rem' },
+    btnPresetActive: { padding: '0.5rem 1.25rem', background: 'linear-gradient(135deg, #3FA96B, #1B7A43)', color: 'white', border: 'none', borderRadius: '999px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(27,122,67,0.3)', fontSize: '0.875rem' },
     btnPresetInactive: { padding: '0.5rem 1.25rem', backgroundColor: '#F3F5FA', color: '#5B6A88', border: '1px solid #E4E8F1', borderRadius: '999px', fontWeight: 500, cursor: 'pointer', fontSize: '0.875rem' },
     btnClose: { backgroundColor: '#F3F5FA', border: '1px solid #E4E8F1', color: '#5B6A88', fontSize: '1rem', cursor: 'pointer', borderRadius: '999px', padding: '0.3rem 0.7rem', lineHeight: 1 },
     // Filter strips
-    filterStrip: { padding: '1rem 1.25rem', backgroundColor: '#FFF6EC', borderRadius: '14px', borderLeft: '4px solid #FF7A00', marginBottom: '1.25rem' },
+    filterStrip: { padding: '1rem 1.25rem', backgroundColor: '#EAF7EF', borderRadius: '14px', borderLeft: '4px solid #1B7A43', marginBottom: '1.25rem' },
     subFilterStrip: { padding: '1rem 1.25rem', backgroundColor: '#FAFBFF', borderRadius: '14px', border: '1px solid #EEF1F8', marginBottom: '1.25rem' },
     searchHint: { display: 'block', marginTop: '0.5rem', fontSize: '0.75rem', color: '#8A96AD' },
     // Modal
@@ -1033,23 +1032,23 @@ export default function JadwalPage() {
     modalFooter: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #EEF1F8' },
     btnDeleteModal: { marginRight: 'auto', padding: '0.6rem 1rem', backgroundColor: '#FDEBEE', color: '#E5484D', border: '1px solid #F8CDD3', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' },
     // Info/warning boxes
-    infoBlue: { padding: '0.75rem 1rem', borderRadius: '10px', backgroundColor: '#EDEBFF', border: '1px solid #DCD6FF', fontSize: '0.8rem', color: '#5B4FE0', marginTop: '0.75rem' },
-    warnYellow: { padding: '0.75rem 1rem', borderRadius: '10px', backgroundColor: '#FFF6EC', border: '1px solid #FFE1BF', fontSize: '0.8rem', color: '#A85400', marginTop: '0.75rem' },
+    infoBlue: { padding: '0.75rem 1rem', borderRadius: '10px', backgroundColor: '#E3F5EA', border: '1px solid #BEE7CC', fontSize: '0.8rem', color: '#1B7A43', marginTop: '0.75rem' },
+    warnYellow: { padding: '0.75rem 1rem', borderRadius: '10px', backgroundColor: '#EAF7EF', border: '1px solid #BEE7CC', fontSize: '0.8rem', color: '#12592F', marginTop: '0.75rem' },
     errRed: { padding: '0.75rem 1rem', borderRadius: '10px', backgroundColor: '#FDF1F2', border: '1px solid #F8CDD3', fontSize: '0.8rem', color: '#E5484D', marginTop: '0.75rem' },
     // Day section
-    dayBadge: { backgroundColor: '#FFEEDD', color: '#C15A00', padding: '0.2rem 0.85rem', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700 },
+    dayBadge: { backgroundColor: '#D7F0E1', color: '#146C39', padding: '0.2rem 0.85rem', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700 },
     // Table cells
     cellBreak: { backgroundColor: '#FDEBEE', textAlign: 'center', padding: '0.5rem', fontSize: '0.72rem', fontWeight: 700, color: '#E5484D', position: 'relative', border: '1px solid #F8CDD3' },
     cellOccupied: { backgroundColor: '#E4F7F0', padding: '0.25rem', fontSize: '0.72rem', position: 'relative', border: '1px solid #C3EEDF', cursor: 'pointer', textAlign: 'center', verticalAlign: 'middle' },
-    customPreferenceBadge: { display: 'inline-block', backgroundColor: '#FFF6EC', color: '#A85400', border: '1px solid #FFE1BF', borderRadius: '999px', padding: '0.08rem 0.4rem', fontSize: '0.6rem', fontWeight: 700 },
+    customPreferenceBadge: { display: 'inline-block', backgroundColor: '#EAF7EF', color: '#12592F', border: '1px solid #BEE7CC', borderRadius: '999px', padding: '0.08rem 0.4rem', fontSize: '0.6rem', fontWeight: 700 },
     cellEmpty: { backgroundColor: 'white', padding: '0.25rem', border: '1px solid #F3F5FA', textAlign: 'center', verticalAlign: 'middle', cursor: 'pointer' },
-    cellBtnEdit: { fontSize: '0.65rem', backgroundColor: '#EDEBFF', color: '#5B4FE0', border: 'none', borderRadius: '999px', padding: '0.15rem 0.5rem', cursor: 'pointer', marginRight: '0.25rem', fontWeight: 600 },
+    cellBtnEdit: { fontSize: '0.65rem', backgroundColor: '#E3F5EA', color: '#1B7A43', border: 'none', borderRadius: '999px', padding: '0.15rem 0.5rem', cursor: 'pointer', marginRight: '0.25rem', fontWeight: 600 },
     cellBtnDel: { fontSize: '0.65rem', backgroundColor: '#FDEBEE', color: '#E5484D', border: 'none', borderRadius: '999px', padding: '0.15rem 0.5rem', cursor: 'pointer', fontWeight: 600 },
-    cellAddBtn: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#FF7A00', fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer' },
+    cellAddBtn: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#1B7A43', fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer' },
     // Checkbox day toggle
     dayToggleCard: { backgroundColor: '#FAFBFF', borderRadius: '14px', border: '1px solid #EEF1F8', padding: '1rem 1.5rem', marginBottom: '1.5rem' },
     // Preset info
-    presetInfoBox: { backgroundColor: '#FFF6EC', borderRadius: '14px', padding: '0.9rem 1.1rem', marginTop: '0.75rem', fontSize: '0.8rem', color: '#A85400', borderLeft: '4px solid #FF7A00' },
+    presetInfoBox: { backgroundColor: '#EAF7EF', borderRadius: '14px', padding: '0.9rem 1.1rem', marginTop: '0.75rem', fontSize: '0.8rem', color: '#12592F', borderLeft: '4px solid #1B7A43' },
     // Mini dashboard stats
     miniStatsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '0.85rem', marginBottom: '1.25rem' },
     miniStatCard: { backgroundColor: '#FAFBFF', border: '1px solid #EEF1F8', borderRadius: '14px', padding: '0.9rem 1rem' },
@@ -1060,7 +1059,7 @@ export default function JadwalPage() {
     popupBox: { background: 'white', borderRadius: '20px', width: '360px', maxWidth: '90vw', boxShadow: '0 24px 64px rgba(20,24,40,0.28)', overflow: 'hidden', padding: '2rem', textAlign: 'center' },
     popupTitle: { fontSize: '2.5rem', margin: '0 0 1rem 0', lineHeight: 1 },
     popupText: { fontSize: '0.95rem', color: '#1E2A45', margin: '0 0 1.5rem 0', lineHeight: '1.5', whiteSpace: 'pre-line', fontWeight: 500 },
-    popupBtn: { padding: '0.6rem 1.6rem', background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 14px rgba(255,122,0,0.3)', transition: 'opacity 0.2s' },
+    popupBtn: { padding: '0.6rem 1.6rem', background: 'linear-gradient(135deg, #3FA96B, #1B7A43)', color: 'white', border: 'none', borderRadius: '999px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 14px rgba(27,122,67,0.3)', transition: 'opacity 0.2s' },
   };
 
   const effectivePreferencePreset = getEffectivePreferencePreset({
@@ -1086,7 +1085,7 @@ export default function JadwalPage() {
         </div>
         <div style={s.headerIconWrap}><span style={s.headerIcon}>📅</span></div>
       </div>
-      <div style={{ textAlign: 'center', padding: '4rem', color: '#FF7A00', fontWeight: 600 }}>⏳ Checking authentication...</div>
+      <div style={{ textAlign: 'center', padding: '4rem', color: '#1B7A43', fontWeight: 600 }}>⏳ Checking authentication...</div>
     </div>
   );
 
@@ -1100,7 +1099,7 @@ export default function JadwalPage() {
         </div>
         <div style={s.headerIconWrap}><span style={s.headerIcon}>📅</span></div>
       </div>
-      <div style={{ textAlign: 'center', padding: '4rem', color: '#FF7A00', fontWeight: 600 }}>⏳ Memuat data...</div>
+      <div style={{ textAlign: 'center', padding: '4rem', color: '#1B7A43', fontWeight: 600 }}>⏳ Memuat data...</div>
     </div>
   );
 
@@ -1271,7 +1270,7 @@ export default function JadwalPage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
             {days.map((day) => (
               <label key={day} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', color: '#42506B', fontWeight: 500 }}>
-                <input type="checkbox" checked={visibleDays[day]} onChange={(e) => setVisibleDays({ ...visibleDays, [day]: e.target.checked })} style={{ accentColor: '#FF7A00', width: '16px', height: '16px' }} />
+                <input type="checkbox" checked={visibleDays[day]} onChange={(e) => setVisibleDays({ ...visibleDays, [day]: e.target.checked })} style={{ accentColor: '#1B7A43', width: '16px', height: '16px' }} />
                 {day}
               </label>
             ))}
@@ -1293,7 +1292,7 @@ export default function JadwalPage() {
             </div>
             <div style={s.miniStatCard}>
               <div style={s.miniStatLabel}>Belum Masuk Jadwal</div>
-              <div style={{ ...s.miniStatValue, color: '#C15A00' }}>{miniDashboardStats.belumMasuk}</div>
+              <div style={{ ...s.miniStatValue, color: '#146C39' }}>{miniDashboardStats.belumMasuk}</div>
               <div style={s.miniStatHint}>Perlu dijadwalkan</div>
             </div>
           </div>
@@ -1360,7 +1359,7 @@ export default function JadwalPage() {
                       <tbody>
                         {[...ruanganList].sort((a, b) => (a.f_namaruang || '').localeCompare(b.f_namaruang || '')).map((ruangan) => (
                           <tr key={ruangan.id} style={{ borderBottom: '1px solid #F3F5FA' }}>
-                            <td style={{ padding: '0.6rem 0.75rem', fontWeight: 700, fontSize: '0.8rem', color: '#C15A00', backgroundColor: '#FFF6EC', border: '1px solid #EEF1F8', verticalAlign: 'middle' }}>
+                            <td style={{ padding: '0.6rem 0.75rem', fontWeight: 700, fontSize: '0.8rem', color: '#146C39', backgroundColor: '#EAF7EF', border: '1px solid #EEF1F8', verticalAlign: 'middle' }}>
                               {ruangan.f_namaruang}
                             </td>
                             {timeSlots.map((slot, idx) => {
@@ -1395,8 +1394,8 @@ export default function JadwalPage() {
                                 </td>
                               );
                               if (isOccupied && occupyingSession) return (
-                                <td key={idx} style={{ ...s.cellOccupied, backgroundColor: '#FFF6EC', border: '1px solid #FFE1BF' }} onClick={() => openEditModal(occupyingSession)}>
-                                  <span style={{ fontSize: '0.65rem', color: '#C15A00', fontStyle: 'italic', opacity: 0.85 }}>({occupyingSession.display_name})</span>
+                                <td key={idx} style={{ ...s.cellOccupied, backgroundColor: '#EAF7EF', border: '1px solid #BEE7CC' }} onClick={() => openEditModal(occupyingSession)}>
+                                  <span style={{ fontSize: '0.65rem', color: '#146C39', fontStyle: 'italic', opacity: 0.85 }}>({occupyingSession.display_name})</span>
                                 </td>
                               );
                               if (hasActiveDisplayFilter) return (
@@ -1448,7 +1447,7 @@ export default function JadwalPage() {
                   <div style={{ display: 'flex', gap: '1.5rem' }}>
                     {['manual', 'import'].map((mode) => (
                       <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.875rem', color: '#42506B', fontWeight: sessionInputMode === mode ? 700 : 400 }}>
-                        <input type="radio" value={mode} checked={sessionInputMode === mode} onChange={(e) => setSessionInputMode(e.target.value)} style={{ accentColor: '#FF7A00' }} />
+                        <input type="radio" value={mode} checked={sessionInputMode === mode} onChange={(e) => setSessionInputMode(e.target.value)} style={{ accentColor: '#1B7A43' }} />
                         {mode === 'manual' ? 'Manual' : 'Import dari Kelas'}
                       </label>
                     ))}
@@ -1461,7 +1460,7 @@ export default function JadwalPage() {
                 <div>
                   <label style={s.label}>Jam Selesai (Otomatis)</label>
                   <input type="time" value={calculatedJamSelesai} disabled style={s.inputDisabled} />
-                  {selectedKelas && <small style={{ fontSize: '0.75rem', color: '#FF7A00', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>📊 {selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1} SKS × {settings.durasiSlot} menit</small>}
+                  {selectedKelas && <small style={{ fontSize: '0.75rem', color: '#1B7A43', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>📊 {selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1} SKS × {settings.durasiSlot} menit</small>}
                   {selectedKelas && (() => { const sks = selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1; if (sks >= 2 && isSessionCutByBreak(selectedHari, selectedJamMulai, calculatedJamSelesai, sks)) { const bt = getBreakTimes(selectedHari); return <div style={s.errRed}><strong>❌ Jadwal Tidak Valid</strong><br />Kelas {sks} SKS tidak boleh terpotong istirahat <strong>{bt.mulai}–{bt.selesai}</strong></div>; } return null; })()}
                 </div>
                 <div>
@@ -1534,7 +1533,7 @@ export default function JadwalPage() {
                     type="checkbox"
                     checked={autoGenSettings.combineTheoryPracticum}
                     onChange={(e) => setAutoGenSettings({ ...autoGenSettings, combineTheoryPracticum: e.target.checked })}
-                    style={{ accentColor: '#FF7A00' }}
+                    style={{ accentColor: '#1B7A43' }}
                   />
                   Gabungkan teori dan praktikum (jika pasangan ditemukan)
                 </label>
@@ -1543,7 +1542,7 @@ export default function JadwalPage() {
                     type="checkbox"
                     checked={autoGenSettings.skipSaturday}
                     onChange={(e) => setAutoGenSettings({ ...autoGenSettings, skipSaturday: e.target.checked })}
-                    style={{ accentColor: '#FF7A00' }}
+                    style={{ accentColor: '#1B7A43' }}
                   />
                   Tidak mengisi hari Sabtu
                 </label>

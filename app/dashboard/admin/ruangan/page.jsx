@@ -375,17 +375,17 @@ export default function RuanganPage() {
       }
 
       input:hover, select:hover, textarea:hover {
-        border-color: #FF7A00 !important;
+        border-color: #1B7A43 !important;
       }
 
       input:focus, select:focus, textarea:focus {
         outline: none;
-        border-color: #FF7A00 !important;
-        box-shadow: 0 0 0 3px rgba(255,122,0,0.14) !important;
+        border-color: #1B7A43 !important;
+        box-shadow: 0 0 0 3px rgba(27,122,67,0.14) !important;
       }
 
       tr.edumy-row:hover {
-        background-color: #FFF6EC !important;
+        background-color: #EAF7EF !important;
       }
 
       ::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -414,14 +414,14 @@ export default function RuanganPage() {
         {/* Stat widgets */}
         <div style={styles.statsRow}>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#FFEEDD', color: '#FF7A00' }}>🏢</div>
+            <div style={{ ...styles.statIcon, background: '#E3F5EA', color: '#1B7A43' }}>🏢</div>
             <div>
               <div style={styles.statNumber}>{totalRuangan}</div>
               <div style={styles.statLabel}>Total Ruangan</div>
             </div>
           </div>
           <div style={styles.statCard}>
-            <div style={{ ...styles.statIcon, background: '#E7EEFF', color: '#3E5EF0' }}>👥</div>
+            <div style={{ ...styles.statIcon, background: '#D7F0E1', color: '#146C39' }}>👥</div>
             <div>
               <div style={styles.statNumber}>{totalKapasitas}</div>
               <div style={styles.statLabel}>Total Kapasitas</div>
@@ -762,9 +762,9 @@ export default function RuanganPage() {
 
 
 // ── Edumy-inspired design tokens ──────────────────────────────
-// Primary: #FF7A00 (Edumy signature orange)
+// Primary: #1B7A43 (dark green)
 // Ink/navy: #1E2A45 · Muted text: #8A96AD · Background: #F3F5FA
-// Accents: indigo #3E5EF0, pink #E0448A, teal #12B886
+// Accents: pink #E0448A, teal #12B886
 
 const styles = {
 
@@ -801,7 +801,7 @@ const styles = {
     margin: '0 0.25rem',
   },
   breadcrumbActive: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '600',
   },
   title: {
@@ -821,11 +821,11 @@ const styles = {
     width: '56px',
     height: '56px',
     borderRadius: '16px',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 8px 20px rgba(255,122,0,0.28)',
+    boxShadow: '0 8px 20px rgba(27,122,67,0.28)',
   },
   headerIcon: {
     fontSize: '1.6rem',
@@ -897,26 +897,26 @@ const styles = {
   // ── Buttons (Edumy pill style) ──────────────────────────────
   btnPrimary: {
     padding: '0.6rem 1.35rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.85rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.35)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.35)',
     transition: 'opacity 0.2s, transform 0.1s',
   },
   btnPrimarySmall: {
     padding: '0.5rem 1.1rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.8rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.3)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.3)',
   },
   btnOutlineTeal: {
     padding: '0.6rem 1.35rem',
@@ -954,7 +954,7 @@ const styles = {
 
   // ── File info strip ────────────────────────────────────────
   fileInfo: {
-    backgroundColor: '#FFF6EC',
+    backgroundColor: '#EAF7EF',
     padding: '0.75rem 1.25rem',
     borderRadius: '14px',
     marginBottom: '1.5rem',
@@ -962,9 +962,9 @@ const styles = {
     gap: '0.75rem',
     alignItems: 'center',
     flexWrap: 'wrap',
-    border: '1px solid #FFE1BF',
+    border: '1px solid #BEE7CC',
     fontSize: '0.875rem',
-    color: '#A85400',
+    color: '#12592F',
     fontWeight: '500',
   },
 
@@ -993,8 +993,8 @@ const styles = {
     fontFamily: "'Poppins', sans-serif",
   },
   badgeCount: {
-    backgroundColor: '#FFEEDD',
-    color: '#C15A00',
+    backgroundColor: '#E3F5EA',
+    color: '#146C39',
     padding: '0.3rem 0.9rem',
     borderRadius: '999px',
     fontSize: '0.78rem',
@@ -1019,7 +1019,7 @@ const styles = {
   loading: {
     textAlign: 'center',
     padding: '3rem',
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontSize: '1rem',
     fontWeight: '600',
   },
@@ -1052,7 +1052,7 @@ const styles = {
     borderBottom: '1px solid #EEF1F8',
   },
   sortIcon: {
-    color: '#FF7A00',
+    color: '#1B7A43',
     fontWeight: '700',
   },
   thCheckbox: {
@@ -1097,13 +1097,13 @@ const styles = {
     cursor: 'pointer',
     width: '17px',
     height: '17px',
-    accentColor: '#FF7A00',
+    accentColor: '#1B7A43',
   },
 
   // ── Data badges (pill style) ────────────────────────────────
   badgeCode: {
-    backgroundColor: '#EDEBFF',
-    color: '#5B4FE0',
+    backgroundColor: '#E3F5EA',
+    color: '#1B7A43',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',
@@ -1113,8 +1113,8 @@ const styles = {
     letterSpacing: '0.03em',
   },
   badgeCapacity: {
-    backgroundColor: '#E7EEFF',
-    color: '#3E5EF0',
+    backgroundColor: '#D7F0E1',
+    color: '#146C39',
     padding: '0.2rem 0.75rem',
     borderRadius: '999px',
     fontSize: '0.8rem',
@@ -1133,7 +1133,7 @@ const styles = {
 
   // ── Row action icon-buttons ────────────────────────────────
   btnIconPrimary: {
-    background: '#EDEBFF',
+    background: '#E3F5EA',
     border: 'none',
     fontSize: '0.95rem',
     cursor: 'pointer',
@@ -1141,7 +1141,7 @@ const styles = {
     borderRadius: '10px',
     transition: 'background 0.2s',
     marginRight: '0.4rem',
-    color: '#5B4FE0',
+    color: '#1B7A43',
   },
   btnIconDanger: {
     background: '#FDEBEE',
@@ -1244,9 +1244,9 @@ const styles = {
     left: 0,
     zIndex: 1,
     padding: '0.9rem',
-    background: '#FFF6EC',
+    background: '#EAF7EF',
     border: '1px solid #EEF1F8',
-    color: '#C15A00',
+    color: '#146C39',
     fontWeight: 700,
   },
   filterCell: {
@@ -1345,14 +1345,14 @@ const styles = {
   },
   btnClose: {
     padding: '0.6rem 1.6rem',
-    background: 'linear-gradient(135deg, #FF9A3C, #FF7A00)',
+    background: 'linear-gradient(135deg, #3FA96B, #1B7A43)',
     color: 'white',
     border: 'none',
     borderRadius: '999px',
     fontSize: '0.9rem',
     fontWeight: '600',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(255,122,0,0.3)',
+    boxShadow: '0 4px 14px rgba(27,122,67,0.3)',
     transition: 'opacity 0.2s',
   },
 
