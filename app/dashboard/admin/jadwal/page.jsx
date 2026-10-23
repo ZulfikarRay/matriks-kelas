@@ -649,13 +649,37 @@ export default function JadwalPage() {
         };
       })
   ));
+  const scheduledKrsClassIds = new Set(
+    scheduledKrsSessions
+      .map((session) => Number(session.kelas_id))
+      .filter((kelasId) => Number.isFinite(kelasId) && kelasId > 0)
+  );
+  const unscheduledKrsClasses = kelasList
+    .filter((kelas) => !scheduledKrsClassIds.has(Number(kelas.id)))
+    .map((kelas) => ({
+      id: `kelas-${kelas.id}`,
+      kelas_id: kelas.id,
+      curriculumId: kelas.f_kurikulum ? String(kelas.f_kurikulum) : '',
+      courseName: kelas.f_namamk || kelas.display_name || kelas.nama_kelas || '',
+      lecturerName: kelas.f_namapegawai || kelas.dosen || '',
+      hari: 'Belum dijadwalkan',
+      jam_mulai: '',
+      jam_selesai: '',
+      isUnscheduled: true,
+    }));
 
-  const filteredKrsSessions = scheduledKrsSessions
+  const filteredKrsSessions = [...scheduledKrsSessions, ...unscheduledKrsClasses]
     .filter((session) => (
       selectedKrsCurriculumIds === null ||
       selectedKrsCurriculumIds.includes(session.curriculumId)
     ))
     .sort((a, b) => {
+      const aUnscheduled = Boolean(a.isUnscheduled);
+      const bUnscheduled = Boolean(b.isUnscheduled);
+      if (krsDaySortDirection && aUnscheduled !== bUnscheduled) {
+        return aUnscheduled ? 1 : -1;
+      }
+
       const dayComparison = days.indexOf(a.hari) - days.indexOf(b.hari);
       if (krsDaySortDirection && dayComparison !== 0) {
         return krsDaySortDirection === 'asc' ? dayComparison : -dayComparison;
@@ -2196,7 +2220,7 @@ export default function JadwalPage() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                 <span style={{ color: '#5B6A88', fontSize: '0.82rem' }}>
-                  {filteredKrsSessions.length} mata kuliah terjadwal
+                  {filteredKrsSessions.length} kelas KRS
                 </span>
               </div>
 
@@ -2250,13 +2274,15 @@ export default function JadwalPage() {
                         </td>
                         <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA' }}>{session.hari}</td>
                         <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA', whiteSpace: 'nowrap' }}>
-                          {String(session.jam_mulai || '').slice(0, 5) || '-'} – {String(session.jam_selesai || '').slice(0, 5) || '-'}
+                          {session.isUnscheduled
+                            ? 'Belum dijadwalkan'
+                            : `${String(session.jam_mulai || '').slice(0, 5) || '-'} – ${String(session.jam_selesai || '').slice(0, 5) || '-'}`}
                         </td>
                       </tr>
                     )) : (
                       <tr>
                         <td colSpan={4} style={{ padding: '1.5rem', textAlign: 'center', color: '#8A96AD', fontSize: '0.85rem' }}>
-                          Tidak ada mata kuliah terjadwal untuk filter ini.
+                          Tidak ada kelas KRS untuk filter ini.
                         </td>
                       </tr>
                     )}
