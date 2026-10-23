@@ -32,6 +32,7 @@ export default function JadwalPage() {
 
   const [activePreset, setActivePreset] = useState('Normal');
   const [settings, setSettings] = useState(presets.Normal);
+  const slotDuration = Math.min(120, Math.max(10, Number(settings.durasiSlot) || 50));
   const [selectedPresetOption, setSelectedPresetOption] = useState('Normal');
   const [visibleDays, setVisibleDays] = useState({ Senin: true, Selasa: true, Rabu: true, Kamis: true, Jumat: true, Sabtu: true });
   const [showSessionModal, setShowSessionModal] = useState(false);
@@ -62,6 +63,13 @@ export default function JadwalPage() {
   const [krsSort, setKrsSort] = useState({ field: 'courseName', direction: 'asc' });
   const [krsDaySortDirection, setKrsDaySortDirection] = useState('asc');
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const generatingRef = useRef(false);
+  const requestIdRef = useRef(0);
+  const filterRef = useRef({ tahun: '', semester: 'Gasal' });
+  filterRef.current = { tahun: selectedTahunAjaran, semester: selectedSemester };
+
   const tableRef = useRef(null);
   const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const semesters = ['Gasal', 'Genap'];
@@ -74,89 +82,117 @@ export default function JadwalPage() {
     return result;
   }, {});
 
-  // ===== ALL LOGIC UNCHANGED =====
-  const fetchData = async () => {
+  const organizeJadwal = (jadwal) => {
+    const organized = {};
+    days.forEach((day) => { organized[day] = {}; });
+    jadwal.forEach((j) => {
+      if (!organized[j.hari]) organized[j.hari] = {};
+      if (!organized[j.hari][j.ruangan_id]) organized[j.hari][j.ruangan_id] = [];
+      organized[j.hari][j.ruangan_id].push(j);
+    });
+    return organized;
+  };
+
+  const fetchReferenceData = async () => {
     try {
-      setLoading(true);
-      const [kelasRes, jadwalRes, ruanganRes, roomFiltersRes, dosenRes, presetsRes] = await Promise.all([
-        fetch('/api/kelas'),
-        fetch('/api/jadwal'),
-        fetch('/api/ruangan'),
+      const [roomFiltersRes, dosenRes, presetsRes] = await Promise.all([
         fetch('/api/ruangan/filter-kelas'),
         fetch('/api/dosen'),
-        fetch('/api/jadwal/presets')
+        fetch('/api/jadwal/presets'),
       ]);
-      
-      if (!kelasRes.ok) {
-        const error = await kelasRes.json();
-        throw new Error(`Kelas API error: ${error.error || 'Unknown error'}`);
-      }
-      if (!jadwalRes.ok) {
-        const error = await jadwalRes.json();
-        throw new Error(`Jadwal API error: ${error.error || 'Unknown error'}`);
-      }
-      if (!ruanganRes.ok) {
-        const error = await ruanganRes.json();
-        throw new Error(`Ruangan API error: ${error.error || 'Unknown error'}`);
-      }
-      
-      const kelas = await kelasRes.json();
-      const jadwal = await jadwalRes.json();
-      const ruangan = await ruanganRes.json();
-      const roomFilters = await roomFiltersRes.json();
-      const dosen = await dosenRes.json();
-      const presets = await presetsRes.json();
-      // Deduplicate kelas by id
-      const uniqueKelas = Array.from(new Map((Array.isArray(kelas) ? kelas : []).map(k => [k.id, k])).values());
-      setKelasList(uniqueKelas);
-      setRuanganList(Array.isArray(ruangan) ? ruangan : []);
-      setRoomClassFilters(buildRoomClassFilters(Array.isArray(roomFilters) ? roomFilters : []));
+      const roomFilters = roomFiltersRes.ok ? await roomFiltersRes.json() : [];
+      const dosen = dosenRes.ok ? await dosenRes.json() : [];
+      const presetRows = presetsRes.ok ? await presetsRes.json() : [];
+
       const safeDosenList = Array.isArray(dosen) ? dosen : [];
+      setRoomClassFilters(buildRoomClassFilters(Array.isArray(roomFilters) ? roomFilters : []));
       setDosenList(safeDosenList);
-      setDatabasePresetsList(Array.isArray(presets) ? presets : []);
-      const organizedJadwal = {};
-      days.forEach((day) => { organizedJadwal[day] = {}; });
-      const jadwalArray = Array.isArray(jadwal) ? jadwal : [];
-      jadwalArray.forEach((j) => {
-        if (!organizedJadwal[j.hari]) organizedJadwal[j.hari] = {};
-        if (!organizedJadwal[j.hari][j.ruangan_id]) organizedJadwal[j.hari][j.ruangan_id] = [];
-        organizedJadwal[j.hari][j.ruangan_id].push(j);
-      });
-      setJadwalData(organizedJadwal);
+      setDatabasePresetsList(Array.isArray(presetRows) ? presetRows : []);
       await loadCustomPreferenceIndicators(safeDosenList);
     } catch {
-      showMessage('error', 'Error loading data. Please try again.');
-      setKelasList([]); setRuanganList([]); setRoomClassFilters({}); setDosenList([]); setDatabasePresetsList([]); setCustomPreferenceByDosenId({});
-    } finally { setLoading(false); }
+      showMessage('error', 'Gagal memuat data referensi.');
+    }
+  };
+
+  const fetchScheduleData = async () => {
+    const requestId = ++requestIdRef.current;      // ignore out-of-order responses
+    try {
+      setRefreshing(true);
+      const responses = await Promise.all([fetch('/api/kelas'), fetch('/api/jadwal'), fetch('/api/ruangan')]);
+      const names = ['Kelas', 'Jadwal', 'Ruangan'];
+      for (let i = 0; i < responses.length; i += 1) {
+        if (!responses[i].ok) {
+          const error = await responses[i].json().catch(() => ({}));
+          throw new Error(`${names[i]} API error: ${error.error || 'Unknown error'}`);
+        }
+      }
+      const [kelasRaw, jadwalRaw, ruanganRaw] = await Promise.all(responses.map((r) => r.json()));
+      if (requestId !== requestIdRef.current) return;
+
+      const { tahun, semester } = filterRef.current;
+      const filterActive = Boolean(tahun && semester);
+      let kelas = Array.isArray(kelasRaw) ? kelasRaw : [];
+      let jadwal = Array.isArray(jadwalRaw) ? jadwalRaw : [];
+
+      if (filterActive) {
+        const semesterNumbers = getSemesterNumbers(semester);
+        kelas = kelas.filter((k) => {
+          const kSemester = Number(k.f_semester || k.semester || k.matkul_semester || 0);
+          return (!k.f_tahun_ajaran || String(k.f_tahun_ajaran) === String(tahun)) && semesterNumbers.includes(kSemester);
+        });
+      }
+      const uniqueKelas = Array.from(new Map(kelas.map((k) => [k.id, k])).values());
+
+      if (filterActive) {
+        const kelasIds = new Set(uniqueKelas.map((k) => Number(k.id)));
+        jadwal = jadwal.filter((j) => {
+          const kelasId = j.kelas_id ?? j.f_kelas;
+          const isManual = kelasId === null || kelasId === undefined || kelasId === '';
+          // Manual sessions have no kelas, so filter them by semester instead of dropping them
+          return isManual ? isSessionInSemesterLabel(j.semester, semester) : kelasIds.has(Number(kelasId));
+        });
+      }
+
+      setKelasList(uniqueKelas);
+      setRuanganList(Array.isArray(ruanganRaw) ? ruanganRaw : []);
+      setJadwalData(organizeJadwal(jadwal));
+    } catch (err) {
+      if (requestId === requestIdRef.current) showMessage('error', `Error loading data: ${err.message}`);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setRefreshing(false);
+        setLoading(false);        // `loading` now only covers the first load
+      }
+    }
   };
 
   // Check auth on mount
   useEffect(() => {
+    let cancelled = false;
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/auth/session');
-        if (!res.ok) {
-          router.push('/login');
-          return;
-        }
+        if (!res.ok) { router.replace('/login'); return; }
+        if (!cancelled) setChecking(false);      // only on success
       } catch {
-        router.push('/login');
-      } finally {
-        setChecking(false);
+        router.replace('/login');
       }
     };
-
     checkAuth();
+    return () => { cancelled = true; };
   }, [router]);
 
   // Load data only after auth check
   useEffect(() => {
-    if (!checking) {
-      fetchData();
-      fetchTahunAjaran();
-    }
+    if (checking) return;
+    fetchReferenceData();
+    fetchTahunAjaran();
   }, [checking]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (checking) return;
+    fetchScheduleData();
+  }, [checking, selectedTahunAjaran, selectedSemester]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleEditDosenPreference = (dosen) => {
     setSelectedDosenForPref(dosen);
@@ -218,7 +254,7 @@ export default function JadwalPage() {
   };
 
   useEffect(() => { if (selectedTahunAjaran && selectedSemester) { fetchKelasAndJadwalBySemester(selectedTahunAjaran, selectedSemester); } else { setKelasList([]); setJadwalData({}); } }, [selectedTahunAjaran, selectedSemester]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setSelectedJamMulai(settings.jamMulai); setCalculatedJamSelesai(calculateJamSelesai(settings.jamMulai, 1)); }, [settings.durasiSlot, activePreset]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setSelectedJamMulai(settings.jamMulai); setCalculatedJamSelesai(calculateJamSelesai(settings.jamMulai, 1)); }, [slotDuration, activePreset]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setAutoGenSettings((prev) => ({ ...prev, semester: selectedSemester })); }, [selectedSemester]);
 
   // Add hover styles + font import on client side only (matches DosenPage design system)
@@ -273,15 +309,15 @@ export default function JadwalPage() {
     const slots = []; const mulai = timeToMinutes(settings.jamMulai); const selesai = timeToMinutes(settings.jamSelesai);
     const { mulai: breakMulai, selesai: breakSelesai } = getBreakTimes(hari);
     const breakMulaiMin = timeToMinutes(breakMulai); const breakSelesaiMin = timeToMinutes(breakSelesai);
-    for (let time = mulai; time < selesai; time += settings.durasiSlot) {
-      const endTime = time + settings.durasiSlot;
+    for (let time = mulai; time < selesai; time += slotDuration) {
+      const endTime = time + slotDuration;
       const isBreak = (time >= breakMulaiMin && time < breakSelesaiMin) || (time < breakSelesaiMin && endTime > breakMulaiMin);
       slots.push({ start: minutesToTime(time), end: minutesToTime(Math.min(endTime, selesai)), isBreak });
     }
     return slots;
   };
 
-  const calculateJamSelesai = (jamMulai, sks) => { const startMinutes = timeToMinutes(jamMulai); const durationMinutes = (sks || 1) * settings.durasiSlot; return minutesToTime(startMinutes + durationMinutes); };
+  const calculateJamSelesai = (jamMulai, sks) => { const startMinutes = timeToMinutes(jamMulai); const durationMinutes = (sks || 1) * slotDuration; return minutesToTime(startMinutes + durationMinutes); };
   const getRoomFloor = (ruangan) => Number(ruangan?.lantai ?? ruangan?.f_lantai);
   const getDosenIdForKelas = (kelas) => {
     const dosenName = normalizeText(kelas?.dosen);
@@ -740,7 +776,7 @@ export default function JadwalPage() {
     const presetKey = selectedPresetOption || activePreset || 'Normal';
     const nextSettings = {
       jamMulai: settings.jamMulai,
-      durasiSlot: settings.durasiSlot,
+      durasiSlot: slotDuration,
       jamIstirahatMulaiSeninKamis: settings.jamIstirahatMulaiSeninKamis,
       jamIstirahatSelesaiSeninKamis: settings.jamIstirahatSelesaiSeninKamis,
       jamIstirahatMulaiSabtu: settings.jamIstirahatMulaiSabtu,
@@ -796,13 +832,13 @@ export default function JadwalPage() {
       const res = await fetch('/api/jadwal', { method: endpoint.method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(endpoint.body) });
       if (!res.ok) { const err = await res.json(); showMessage('error', err.error || 'Gagal menyimpan sesi'); return; }
       showMessage('success', editingSession ? 'Sesi diupdate' : 'Sesi ditambahkan');
-      setSessionInput(''); setEditingSession(null); setShowSessionModal(false); await fetchData();
+      setSessionInput(''); setEditingSession(null); setShowSessionModal(false); await fetchScheduleData();
     } catch (err) { showMessage('error', `Error: ${err.message}`); }
   };
 
   const handleDeleteSession = async (jadwalId) => {
     if (!confirm('Hapus sesi ini?')) return;
-    try { const res = await fetch('/api/jadwal', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: jadwalId }) }); if (!res.ok) throw new Error('Gagal menghapus'); showMessage('success', 'Sesi dihapus'); await fetchData(); }
+    try { const res = await fetch('/api/jadwal', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: jadwalId }) }); if (!res.ok) throw new Error('Gagal menghapus'); showMessage('success', 'Sesi dihapus'); await fetchScheduleData(); }
     catch (err) { showMessage('error', `Error: ${err.message}`); return false; }
     return true;
   };
@@ -817,6 +853,9 @@ export default function JadwalPage() {
   };
 
   const generateScheduleAuto = async () => {
+    if (generatingRef.current) return;     // ref blocks double-clicks before state updates
+    generatingRef.current = true;
+    setIsGenerating(true);
     try {
       const generationSemester = autoGenSettings.semester || selectedSemester;
       let workingScheduleData = jadwalData;
@@ -979,8 +1018,8 @@ export default function JadwalPage() {
         const floors = theoryProfile.preferredFloors.filter((floor) => practicumProfile.preferredFloors.includes(floor));
         const roomId = existingSchedule.ruangan_id ?? existingSchedule.f_ruangan;
         const room = ruanganList.find((item) => String(item.id) === String(roomId));
-        const theoryDuration = Number(theory.sks || theory.f_sks_kurikulum || 1) * settings.durasiSlot;
-        const practicumDuration = Number(practicum.sks || practicum.f_sks_kurikulum || 1) * settings.durasiSlot;
+        const theoryDuration = Number(theory.sks || theory.f_sks_kurikulum || 1) * slotDuration;
+        const practicumDuration = Number(practicum.sks || practicum.f_sks_kurikulum || 1) * slotDuration;
         let adjacentCandidate = null;
 
         if (
@@ -1151,7 +1190,7 @@ export default function JadwalPage() {
             : 'Tidak ada kelas yang perlu di-generate',
         );
         setShowAutoGenModal(false);
-        await fetchData();
+        await fetchScheduleData();
         return;
       }
 
@@ -1533,13 +1572,17 @@ export default function JadwalPage() {
         `Hasil generate jadwal:\n\n🧭 Perencanaan: ${planningCoverage}/${emptyKelas.length} kelas direncanakan${planningLimitReached ? ' (batas pencarian tercapai; belum tentu solusi maksimal)' : ''}\n✅ Sesi berhasil: ${generated + partialGeneratedSessions}\n- Kelas single: ${generatedSingleClasses}\n- Pasangan teori+praktikum: ${generatedPairBundles + partialPairBundles} pasangan (${generatedPairBundles * 2 + partialGeneratedSessions} sesi dibuat)\n\n⏭️ Kelas dilewati: ${totalSkipped}\n- Tidak ada slot cocok: ${skippedNoCandidate}\n- Preferensi hanya Sabtu (filter Sabtu aktif): ${skippedSaturdayOnlyPreference}\n- Gagal simpan ke server: ${skippedApiFailure}${partialPairReports.length ? `\n\nPasangan dari kelas yang sudah terjadwal:\n- ${partialPairReports.join('\n- ')}` : ''}${skippedDetails.length ? `\n\nDetail:\n- ${skippedDetails.join('\n- ')}` : ''}`
       );
       setShowAutoGenModal(false);
-      await fetchData();
+      await fetchScheduleData();
     } catch (err) {
       showMessage('error', `Error generating schedule: ${err.message}`);
+    } finally {
+      generatingRef.current = false;
+      setIsGenerating(false);
     }
   };
 
-  const exportToXLSX = () => {
+  const exportToXLSX = async () => {
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     days.forEach((day) => {
       if (!visibleDays[day]) return;
@@ -1713,6 +1756,7 @@ export default function JadwalPage() {
         <div style={s.card}>
           <div style={s.cardHeader}>
             <h3 style={s.cardHeaderText}>🔍 Filter Jadwal</h3>
+            {refreshing && <span style={{ fontSize: '0.8rem', color: '#1B7A43', fontWeight: 600 }}>⏳ Memperbarui...</span>}
           </div>
           <div style={s.cardBody}>
             <div style={s.filterStrip}>
@@ -1823,7 +1867,15 @@ export default function JadwalPage() {
               </div>
               <div>
                 <label style={s.label}>Durasi per Slot (menit)</label>
-                <input type="number" value={settings.durasiSlot} min={10} max={120} onChange={(e) => setSettings({ ...settings, durasiSlot: parseInt(e.target.value) })} style={s.input} />
+                <input
+                  type="number"
+                  value={settings.durasiSlot}
+                  min={10}
+                  max={120}
+                  onChange={(e) => setSettings({ ...settings, durasiSlot: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                  onBlur={() => setSettings((prev) => ({ ...prev, durasiSlot: Math.min(120, Math.max(10, Number(prev.durasiSlot) || 50)) }))}
+                  style={s.input}
+                />
               </div>
               <div>
                 <label style={s.label}>Jam Selesai</label>
@@ -1842,7 +1894,11 @@ export default function JadwalPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
                 <button onClick={() => setShowAutoGenModal(true)} style={s.btnPurple}>⚡ Generate Otomatis</button>
-                <button onClick={handleUpdatePreset} style={s.btnAmber}>💾 Simpan Perubahan</button>
+
+                <button onClick={() => setShowAutoGenModal(false)} disabled={isGenerating} style={isGenerating ? s.btnGrayDisabled : s.btnGray}>Batal</button>
+                <button onClick={generateScheduleAuto} disabled={isGenerating} style={isGenerating ? s.btnGrayDisabled : s.btnPurple}>
+                  {isGenerating ? '⏳ Generating...' : 'Generate'}
+                </button>                <button onClick={handleUpdatePreset} style={s.btnAmber}>💾 Simpan Perubahan</button>
               </div>
               <button onClick={exportToXLSX} style={s.btnSuccess}>📊 Export XLSX</button>
             </div>
@@ -2045,7 +2101,7 @@ export default function JadwalPage() {
                 <div>
                   <label style={s.label}>Jam Selesai (Otomatis)</label>
                   <input type="time" value={calculatedJamSelesai} disabled style={s.inputDisabled} />
-                  {selectedKelas && <small style={{ fontSize: '0.75rem', color: '#1B7A43', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>📊 {selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1} SKS × {settings.durasiSlot} menit</small>}
+                  {selectedKelas && <small style={{ fontSize: '0.75rem', color: '#1B7A43', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>📊 {selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1} SKS × {slotDuration} menit</small>}
                   {selectedKelas && (() => { const sks = selectedKelas.sks || selectedKelas.f_sks_kurikulum || 1; if (sks >= 2 && isSessionCutByBreak(selectedHari, selectedJamMulai, calculatedJamSelesai, sks)) { const bt = getBreakTimes(selectedHari); return <div style={s.errRed}><strong>❌ Jadwal Tidak Valid</strong><br />Kelas {sks} SKS tidak boleh terpotong istirahat <strong>{bt.mulai}–{bt.selesai}</strong></div>; } return null; })()}
                 </div>
                 <div>
@@ -2098,7 +2154,7 @@ export default function JadwalPage() {
           <div style={s.modalBox}>
             <div style={s.modalHeader}>
               <h2 style={s.modalTitle}>⚡ Generate Jadwal Otomatis</h2>
-              <button style={s.btnClose} onClick={() => setShowAutoGenModal(false)}>✕</button>
+              <button style={s.btnClose} disabled={isGenerating} onClick={() => setShowAutoGenModal(false)}>✕</button>
             </div>
             <div style={s.modalBody}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem' }}>
