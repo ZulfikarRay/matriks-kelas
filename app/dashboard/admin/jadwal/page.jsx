@@ -57,6 +57,10 @@ export default function JadwalPage() {
   const [customPreferenceByDosenId, setCustomPreferenceByDosenId] = useState({});
   const [scheduleSearch, setScheduleSearch] = useState('');
   const [selectedProdiFilter, setSelectedProdiFilter] = useState('ALL');
+  const [showKrsListModal, setShowKrsListModal] = useState(false);
+  const [selectedKrsCurriculumIds, setSelectedKrsCurriculumIds] = useState(null);
+  const [krsSort, setKrsSort] = useState({ field: 'courseName', direction: 'asc' });
+  const [krsDaySortDirection, setKrsDaySortDirection] = useState('asc');
 
   const tableRef = useRef(null);
   const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -554,6 +558,7 @@ export default function JadwalPage() {
 
     const scopedKelasIds = new Set(scopedKelas.map((kelas) => Number(kelas.id)));
     const scheduledKelasIds = new Set();
+    let scheduledSessionCount = 0;
 
     Object.values(jadwalData || {}).forEach((dayData) => {
       Object.values(dayData || {}).forEach((sessions) => {
@@ -561,16 +566,16 @@ export default function JadwalPage() {
           const kelasId = Number(session.kelas_id ?? session.f_kelas ?? session.f_kelas_id ?? 0);
           if (!scopedKelasIds.has(kelasId)) return;
           if (!isSessionInSemesterLabel(session.semester, selectedSemester)) return;
+          scheduledSessionCount += 1;
           scheduledKelasIds.add(kelasId);
         });
       });
     });
 
     const totalKelas = scopedKelas.length;
-    const masukJadwal = scheduledKelasIds.size;
-    const belumMasuk = Math.max(totalKelas - masukJadwal, 0);
+    const belumMasuk = Math.max(totalKelas - scheduledKelasIds.size, 0);
 
-    return { totalKelas, masukJadwal, belumMasuk };
+    return { totalKelas, scheduledSessionCount, belumMasuk };
   })();
 
   const getSessionContext = (session) => {
@@ -613,6 +618,72 @@ export default function JadwalPage() {
     return [dosenName, nidn, mataKuliah, session.display_name]
       .map((item) => normalizeText(item))
       .some((item) => item.includes(searchKeyword));
+  };
+
+  const krsCurriculumOptions = Array.from(new Map(
+    kelasList
+      .filter((kelas) => kelas.f_kurikulum)
+      .map((kelas) => [
+        String(kelas.f_kurikulum),
+        {
+          id: String(kelas.f_kurikulum),
+          name: kelas.nama_kurikulum || kelas.kode_kurikulum || `Kurikulum ${kelas.f_kurikulum}`,
+        },
+      ])
+  ).values()).sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+
+  const scheduledKrsSessions = days.flatMap((hari) => (
+    Object.values(jadwalData[hari] || {})
+      .flat()
+      .filter((session) => getSemesterNumbersForComparison(selectedSemester).includes(Number(session.semester)))
+      .map((session) => {
+        const kelas = kelasList.find((item) => Number(item.id) === Number(session.kelas_id));
+        const sessionContext = getSessionContext(session);
+
+        return {
+          ...session,
+          hari,
+          curriculumId: kelas?.f_kurikulum ? String(kelas.f_kurikulum) : '',
+          courseName: session.nama_matakuliah || session.nama_mk || sessionContext.mataKuliah || kelas?.display_name || kelas?.nama_kelas || '',
+          lecturerName: sessionContext.dosenName,
+        };
+      })
+  ));
+
+  const filteredKrsSessions = scheduledKrsSessions
+    .filter((session) => (
+      selectedKrsCurriculumIds === null ||
+      selectedKrsCurriculumIds.includes(session.curriculumId)
+    ))
+    .sort((a, b) => {
+      const dayComparison = days.indexOf(a.hari) - days.indexOf(b.hari);
+      if (krsDaySortDirection && dayComparison !== 0) {
+        return krsDaySortDirection === 'asc' ? dayComparison : -dayComparison;
+      }
+
+      const comparison = a[krsSort.field].localeCompare(b[krsSort.field], 'id', { sensitivity: 'base', numeric: true });
+      return krsSort.direction === 'asc' ? comparison : -comparison;
+    });
+
+  const toggleKrsSort = (field) => {
+    setKrsSort((current) => ({
+      field,
+      direction: current.field === field && current.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const toggleKrsCurriculum = (curriculumId, checked) => {
+    const allCurriculumIds = krsCurriculumOptions.map((curriculum) => curriculum.id);
+    const currentIds = selectedKrsCurriculumIds === null
+      ? allCurriculumIds
+      : selectedKrsCurriculumIds.filter((id) => allCurriculumIds.includes(id));
+    const nextIds = checked
+      ? Array.from(new Set([...currentIds, curriculumId]))
+      : currentIds.filter((id) => id !== curriculumId);
+
+    setSelectedKrsCurriculumIds(
+      allCurriculumIds.every((id) => nextIds.includes(id)) ? null : nextIds
+    );
   };
 
   const hasFormData = () => {
@@ -1646,7 +1717,13 @@ export default function JadwalPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h3 style={s.cardHeaderText}>🎛️ Pengaturan Jadwal</h3>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button
+                onClick={() => setShowKrsListModal(true)}
+                style={s.btnSuccess}
+              >
+                📚 Daftar KRS Mata Kuliah
+              </button>
               {dosenList.length > 0 && (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <button
@@ -1770,9 +1847,9 @@ export default function JadwalPage() {
               <div style={s.miniStatHint}>{selectedProdiFilter === 'ALL' ? 'Semua fakultas/prodi' : `Filter prodi: ${selectedProdiFilter}`}</div>
             </div>
             <div style={s.miniStatCard}>
-              <div style={s.miniStatLabel}>Sudah Masuk Jadwal</div>
-              <div style={{ ...s.miniStatValue, color: '#0E9B6E' }}>{miniDashboardStats.masukJadwal}</div>
-              <div style={s.miniStatHint}>Kelas yang sudah punya sesi</div>
+              <div style={s.miniStatLabel}>Sesi Terjadwal</div>
+              <div style={{ ...s.miniStatValue, color: '#0E9B6E' }}>{miniDashboardStats.scheduledSessionCount}</div>
+              <div style={s.miniStatHint}>Jumlah entri sesi pada jadwal</div>
             </div>
             <div style={s.miniStatCard}>
               <div style={s.miniStatLabel}>Belum Masuk Jadwal</div>
@@ -2050,6 +2127,146 @@ export default function JadwalPage() {
         onSaved={handlePreferenceSaved}
         onShowMessage={showMessage}
       />
+
+      {showKrsListModal && (
+        <div
+          style={s.overlay}
+          onClick={() => setShowKrsListModal(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="krs-list-title"
+            style={{ ...s.modalBox, maxWidth: '1000px', width: 'min(1000px, 100%)' }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={s.modalHeader}>
+              <div>
+                <h2 id="krs-list-title" style={s.modalTitle}>📚 Daftar KRS Mata Kuliah</h2>
+                <p style={{ margin: '0.35rem 0 0', color: '#8A96AD', fontSize: '0.8rem' }}>
+                  Tahun ajaran {tahunAjaranList.find((item) => String(item.id) === String(selectedTahunAjaran))?.tahun_ajaran || '-'} · Semester {selectedSemester}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Tutup daftar KRS"
+                style={s.btnClose}
+                onClick={() => setShowKrsListModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={s.modalBody}>
+              <div style={{ ...s.subFilterStrip, marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <strong style={{ color: '#1E2A45', fontSize: '0.9rem' }}>Filter Kurikulum</strong>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#42506B', fontSize: '0.85rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedKrsCurriculumIds === null}
+                      onChange={(event) => setSelectedKrsCurriculumIds(event.target.checked ? null : [])}
+                      style={{ accentColor: '#1B7A43', width: '16px', height: '16px' }}
+                    />
+                    Tampilkan semua kurikulum
+                  </label>
+                </div>
+                {krsCurriculumOptions.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.25rem', marginTop: '0.75rem' }}>
+                    {krsCurriculumOptions.map((curriculum) => (
+                      <label
+                        key={curriculum.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#42506B', fontSize: '0.82rem' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedKrsCurriculumIds === null || selectedKrsCurriculumIds.includes(curriculum.id)}
+                          onChange={(event) => toggleKrsCurriculum(curriculum.id, event.target.checked)}
+                          style={{ accentColor: '#1B7A43', width: '16px', height: '16px' }}
+                        />
+                        {curriculum.name}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: '0.75rem 0 0', color: '#8A96AD', fontSize: '0.8rem' }}>
+                    Tidak ada kurikulum pada semester ini.
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                <span style={{ color: '#5B6A88', fontSize: '0.82rem' }}>
+                  {filteredKrsSessions.length} mata kuliah terjadwal
+                </span>
+              </div>
+
+              <div style={{ overflowX: 'auto', border: '1px solid #EEF1F8', borderRadius: '12px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '650px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#FAFBFF', color: '#5B6A88', textAlign: 'left', fontSize: '0.75rem' }}>
+                      <th style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #EEF1F8' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggleKrsSort('courseName')}
+                          aria-label={`Urutkan nama KRS ${krsSort.field === 'courseName' && krsSort.direction === 'asc' ? 'Z–A' : 'A–Z'}`}
+                          style={{ padding: 0, border: 0, background: 'none', color: 'inherit', font: 'inherit', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Nama KRS Mata Kuliah {krsSort.field === 'courseName' ? (krsSort.direction === 'asc' ? '↑ A–Z' : '↓ Z–A') : '↕'}
+                        </button>
+                      </th>
+                      <th style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #EEF1F8' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggleKrsSort('lecturerName')}
+                          aria-label={`Urutkan nama dosen ${krsSort.field === 'lecturerName' && krsSort.direction === 'asc' ? 'Z–A' : 'A–Z'}`}
+                          style={{ padding: 0, border: 0, background: 'none', color: 'inherit', font: 'inherit', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Nama Dosen {krsSort.field === 'lecturerName' ? (krsSort.direction === 'asc' ? '↑ A–Z' : '↓ Z–A') : '↕'}
+                        </button>
+                      </th>
+                      <th style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #EEF1F8' }}>
+                        <button
+                          type="button"
+                          onClick={() => setKrsDaySortDirection((direction) => (
+                            direction === 'asc' ? 'desc' : direction === 'desc' ? null : 'asc'
+                          ))}
+                          aria-label={krsDaySortDirection === 'asc' ? 'Urutkan hari Sabtu–Senin' : krsDaySortDirection === 'desc' ? 'Matikan sortir hari' : 'Urutkan hari Senin–Sabtu'}
+                          style={{ padding: 0, border: 0, background: 'none', color: 'inherit', font: 'inherit', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Hari {krsDaySortDirection === 'asc' ? '↑ Senin–Sabtu' : krsDaySortDirection === 'desc' ? '↓ Sabtu–Senin' : '↕ Nonaktif'}
+                        </button>
+                      </th>
+                      <th style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #EEF1F8' }}>Sesi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredKrsSessions.length > 0 ? filteredKrsSessions.map((session) => (
+                      <tr key={session.id} style={{ color: '#1E2A45', fontSize: '0.85rem' }}>
+                        <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA', fontWeight: 600 }}>
+                          {session.courseName || 'Nama mata kuliah tidak tersedia'}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA' }}>
+                          {session.lecturerName || 'Belum ditentukan'}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA' }}>{session.hari}</td>
+                        <td style={{ padding: '0.85rem 1rem', borderBottom: '1px solid #F3F5FA', whiteSpace: 'nowrap' }}>
+                          {String(session.jam_mulai || '').slice(0, 5) || '-'} – {String(session.jam_selesai || '').slice(0, 5) || '-'}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} style={{ padding: '1.5rem', textAlign: 'center', color: '#8A96AD', fontSize: '0.85rem' }}>
+                          Tidak ada mata kuliah terjadwal untuk filter ini.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
