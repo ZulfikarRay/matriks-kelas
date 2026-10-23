@@ -285,17 +285,17 @@ export default function JadwalPage() {
     const dosen = dosenList.find((item) => normalizeText(item.f_namapegawai) === dosenName || normalizeText(item.f_nidn) === dosenName);
     return dosen?.id || null;
   };
-  const isDosenOccupied = (hari, dosenId, slotStart, slotEnd, semesterLabel = selectedSemester) => {
+  const isDosenOccupied = (hari, dosenId, slotStart, slotEnd, semesterLabel = selectedSemester, scheduleData = jadwalData) => {
     if (!dosenId) return false;
     const startMin = timeToMinutes(slotStart);
     const endMin = timeToMinutes(slotEnd);
-    return Object.values(jadwalData[hari] || {}).some((sessions) => sessions.some((session) => (
+    return Object.values(scheduleData[hari] || {}).some((sessions) => sessions.some((session) => (
       String(session.dosen_id) === String(dosenId) &&
       isSessionInSemesterLabel(session.semester, semesterLabel) &&
       timeToMinutes(session.jam_mulai) < endMin && timeToMinutes(session.jam_selesai) > startMin
     )));
   };
-  const isSlotOccupied = (hari, ruanganId, slotStart, slotEnd, semesterLabel = selectedSemester) => { const dayData = jadwalData[hari] || {}; const sessionsInRuangan = dayData[ruanganId] || []; const slotStartMin = timeToMinutes(slotStart); const slotEndMin = timeToMinutes(slotEnd); return sessionsInRuangan.some((session) => { if (!isSessionInSemesterLabel(session.semester, semesterLabel)) return false; const sessionStart = timeToMinutes(session.jam_mulai); const sessionEnd = timeToMinutes(session.jam_selesai); return sessionStart < slotEndMin && sessionEnd > slotStartMin; }); };
+  const isSlotOccupied = (hari, ruanganId, slotStart, slotEnd, semesterLabel = selectedSemester, scheduleData = jadwalData) => { const dayData = scheduleData[hari] || {}; const sessionsInRuangan = dayData[ruanganId] || []; const slotStartMin = timeToMinutes(slotStart); const slotEndMin = timeToMinutes(slotEnd); return sessionsInRuangan.some((session) => { if (!isSessionInSemesterLabel(session.semester, semesterLabel)) return false; const sessionStart = timeToMinutes(session.jam_mulai); const sessionEnd = timeToMinutes(session.jam_selesai); return sessionStart < slotEndMin && sessionEnd > slotStartMin; }); };
   const findExistingKelasSchedule = (kelasId) => { const semesterNumbers = getSemesterNumbersForComparison(selectedSemester); for (const hari of days) { const dayData = jadwalData[hari] || {}; for (const ruanganId in dayData) { const sessions = dayData[ruanganId]; const found = sessions.find((s) => s.kelas_id === kelasId && semesterNumbers.includes(Number(s.semester))); if (found) return { found: true, hari, jamMulai: found.jam_mulai, jamSelesai: found.jam_selesai, ruangan: ruanganList.find((r) => r.id === parseInt(ruanganId))?.f_namaruang || 'Ruangan tidak diketahui' }; } } return { found: false }; };
   const isSessionCutByBreak = (hari, jamMulai, jamSelesai, sks = 1) => { if (sks < 2) return false; const breakTimes = getBreakTimes(hari); const breakStartMin = timeToMinutes(breakTimes.mulai); const breakEndMin = timeToMinutes(breakTimes.selesai); const sessionStartMin = timeToMinutes(jamMulai); const sessionEndMin = timeToMinutes(jamSelesai); return sessionStartMin < breakEndMin && sessionEndMin > breakStartMin; };
   const findOverlappingSession = (hari, ruanganId, jamMulai, jamSelesai) => { const dayData = jadwalData[hari] || {}; const sessionsInRuangan = dayData[parseInt(ruanganId)] || []; const newStart = timeToMinutes(jamMulai); const newEnd = timeToMinutes(jamSelesai); const semesterNumbers = getSemesterNumbersForComparison(selectedSemester); for (const existingSession of sessionsInRuangan) { if (!semesterNumbers.includes(Number(existingSession.semester))) continue; if (editingSession && existingSession.id === editingSession.id) continue; const existingStart = timeToMinutes(existingSession.jam_mulai); const existingEnd = timeToMinutes(existingSession.jam_selesai); if (newStart < existingEnd && newEnd > existingStart) return { found: true, conflictName: existingSession.display_name, conflictTime: `${existingSession.jam_mulai}-${existingSession.jam_selesai}` }; } return { found: false }; }
@@ -348,6 +348,9 @@ export default function JadwalPage() {
         const daySessions = Object.keys(availability[day] || {});
         return daySessions.some((session) => availability[day][session] !== defaultGrid[day][session]);
       });
+      const availableDays = DEFAULT_PREFERENCE_DAYS.filter((day) => (
+        Object.values(availability[day] || {}).some(Boolean)
+      ));
 
       const hasCustomFloors = Object.keys(defaultFloors).some((floor) => {
         const floorNumber = Number(floor);
@@ -356,7 +359,7 @@ export default function JadwalPage() {
 
       return {
         isCustom: customDayKeys.length > 0 || hasCustomFloors,
-        preferredDays: customDayKeys.length > 0 ? customDayKeys : DEFAULT_PREFERENCE_DAYS,
+        preferredDays: availableDays,
         preferredFloors,
         availability,
       };
@@ -366,7 +369,7 @@ export default function JadwalPage() {
     }
   };
 
-  const getAutoGenCandidateSlots = (kelas, profile, semesterLabel = selectedSemester) => {
+  const getAutoGenCandidateSlots = (kelas, profile, semesterLabel = selectedSemester, scheduleData = jadwalData) => {
     const sks = Number(kelas?.sks || kelas?.f_sks_kurikulum || 1);
     const preferredFloors = profile?.preferredFloors || [1, 2, 3, 4];
     const preferredDays = Array.isArray(profile?.preferredDays) ? profile.preferredDays : days;
@@ -391,12 +394,10 @@ export default function JadwalPage() {
         if (sks >= 2 && isSessionCutByBreak(day, slot.start, jamSelesai, sks)) return;
 
         rooms.forEach((ruangan) => {
-          if (isSlotOccupied(day, ruangan.id, slot.start, jamSelesai, semesterLabel)) return;
-          if (isDosenOccupied(day, dosenId, slot.start, jamSelesai, semesterLabel)) return;
+          if (isSlotOccupied(day, ruangan.id, slot.start, jamSelesai, semesterLabel, scheduleData)) return;
+          if (isDosenOccupied(day, dosenId, slot.start, jamSelesai, semesterLabel, scheduleData)) return;
 
-          const sessionKey = `${slot.start}-${slot.end}`;
-          const isAvailable = profile?.availability?.[day]?.[sessionKey];
-          if (profile?.isCustom && isAvailable === false) return;
+          if (!isWindowAvailableForProfile(day, slot.start, jamSelesai, profile)) return;
 
           candidates.push({
             hari: day,
@@ -454,12 +455,16 @@ export default function JadwalPage() {
     return coveredKeys.every((key) => profile?.availability?.[hari]?.[key] !== false);
   };
 
-  const getPairedAutoGenCandidateSlots = (theoryKelas, practicumKelas, profile, semesterLabel = selectedSemester) => {
+  const getPairedAutoGenCandidateSlots = (theoryKelas, practicumKelas, theoryProfile, practicumProfile, semesterLabel = selectedSemester, scheduleData = jadwalData) => {
     const theorySks = Number(theoryKelas?.sks || theoryKelas?.f_sks_kurikulum || 1);
     const practicumSks = Number(practicumKelas?.sks || practicumKelas?.f_sks_kurikulum || 1);
     const totalSks = theorySks + practicumSks;
-    const preferredFloors = profile?.preferredFloors || [1, 2, 3, 4];
-    const preferredDays = Array.isArray(profile?.preferredDays) ? profile.preferredDays : days;
+    const theoryFloors = theoryProfile?.preferredFloors || [1, 2, 3, 4];
+    const practicumFloors = practicumProfile?.preferredFloors || [1, 2, 3, 4];
+    const preferredFloors = theoryFloors.filter((floor) => practicumFloors.includes(floor));
+    const theoryDays = Array.isArray(theoryProfile?.preferredDays) ? theoryProfile.preferredDays : days;
+    const practicumDays = Array.isArray(practicumProfile?.preferredDays) ? practicumProfile.preferredDays : days;
+    const preferredDays = theoryDays.filter((day) => practicumDays.includes(day));
     const theoryDosenId = getDosenIdForKelas(theoryKelas);
     const practicumDosenId = getDosenIdForKelas(practicumKelas);
     const allowedDays = autoGenSettings.skipSaturday
@@ -482,12 +487,13 @@ export default function JadwalPage() {
         if (timeToMinutes(totalEnd) > timeToMinutes(settings.jamSelesai)) return;
         if (totalSks >= 2 && isSessionCutByBreak(day, slot.start, totalEnd, totalSks)) return;
 
-        if (!isWindowAvailableForProfile(day, slot.start, totalEnd, profile)) return;
+        if (!isWindowAvailableForProfile(day, slot.start, totalEnd, theoryProfile)) return;
+        if (!isWindowAvailableForProfile(day, slot.start, totalEnd, practicumProfile)) return;
 
         rooms.forEach((ruangan) => {
-          if (isSlotOccupied(day, ruangan.id, slot.start, totalEnd, semesterLabel)) return;
-          if (isDosenOccupied(day, theoryDosenId, slot.start, totalEnd, semesterLabel)) return;
-          if (isDosenOccupied(day, practicumDosenId, slot.start, totalEnd, semesterLabel)) return;
+          if (isSlotOccupied(day, ruangan.id, slot.start, totalEnd, semesterLabel, scheduleData)) return;
+          if (isDosenOccupied(day, theoryDosenId, slot.start, totalEnd, semesterLabel, scheduleData)) return;
+          if (isDosenOccupied(day, practicumDosenId, slot.start, totalEnd, semesterLabel, scheduleData)) return;
 
           candidates.push({
             hari: day,
@@ -718,9 +724,10 @@ export default function JadwalPage() {
   const generateScheduleAuto = async () => {
     try {
       const generationSemester = autoGenSettings.semester || selectedSemester;
-      const emptyKelas = kelasList.filter((k) => {
+      let workingScheduleData = jadwalData;
+      let emptyKelas = kelasList.filter((k) => {
         const hasSchedule = days.some((day) => {
-          const dayData = jadwalData[day] || {};
+          const dayData = workingScheduleData[day] || {};
           return Object.values(dayData).some((arr) => arr.some((j) => {
             const sessionKelasId = Number(j.kelas_id ?? j.f_kelas ?? j.f_kelas_id ?? 0);
             const kelasId = Number(k.id);
@@ -730,15 +737,83 @@ export default function JadwalPage() {
         return !hasSchedule;
       });
 
-      if (emptyKelas.length === 0) {
-        showMessage('success', 'Tidak ada kelas yang perlu di-generate');
-        setShowAutoGenModal(false);
-        return;
-      }
-
       const randomize = (items) => shuffleArray(items);
       const profileCacheByNidn = {};
       const defaultProfile = { isCustom: false, preferredDays: DEFAULT_PREFERENCE_DAYS, preferredFloors: [1, 2, 3, 4], availability: buildDefaultAvailabilityGrid() };
+      const partialPairReports = [];
+      let partialPairBundles = 0;
+      let partialGeneratedSessions = 0;
+      const handledPartialClassIds = new Set();
+      const forceSingleClassIds = new Set();
+      const candidateKey = (candidate) => (
+        `${candidate.hari}-${candidate.ruangan_id}-${candidate.jam_mulai}-${candidate.jam_selesai}`
+      );
+
+      const updateWorkingSchedule = (records, removeIds = []) => {
+        const removedIds = new Set(removeIds.map(String));
+        if (removedIds.size > 0) {
+          const nextScheduleData = { ...workingScheduleData };
+          days.forEach((day) => {
+            const dayData = nextScheduleData[day] || {};
+            const nextDayData = {};
+            Object.entries(dayData).forEach(([roomId, sessions]) => {
+              const remainingSessions = sessions.filter((session) => !removedIds.has(String(session.id)));
+              if (remainingSessions.length > 0) nextDayData[roomId] = remainingSessions;
+            });
+            nextScheduleData[day] = nextDayData;
+          });
+          workingScheduleData = nextScheduleData;
+        }
+
+        records.forEach((record) => {
+          const dayData = workingScheduleData[record.hari] || {};
+          const roomSchedules = dayData[record.ruangan_id] || [];
+          workingScheduleData = {
+            ...workingScheduleData,
+            [record.hari]: {
+              ...dayData,
+              [record.ruangan_id]: [...roomSchedules, record],
+            },
+          };
+        });
+        setJadwalData(workingScheduleData);
+      };
+
+      const postSchedules = async (body) => {
+        const res = await fetch('/api/jadwal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const result = await res.json().catch(() => ({}));
+        return { res, result };
+      };
+
+      const getSchedulesForClass = (kelasId, scheduleData = workingScheduleData) => (
+        days.flatMap((day) => Object.values(scheduleData[day] || {}).flat())
+          .filter((session) => (
+            String(session.kelas_id ?? session.f_kelas ?? session.f_kelas_id) === String(kelasId) &&
+            isSessionInSemesterLabel(session.semester, generationSemester)
+          ))
+      );
+
+      const getPairingKey = (kelas) => {
+        const curriculumId = kelas?.f_kurikulum;
+        if (curriculumId === null || curriculumId === undefined || String(curriculumId).trim() === '') {
+          return null;
+        }
+
+        return `${String(curriculumId).trim()}::${getBaseCourseName(kelas)}`;
+      };
+
+      const sameLecturer = (firstClass, secondClass) => {
+        const firstDosenId = getDosenIdForKelas(firstClass);
+        const secondDosenId = getDosenIdForKelas(secondClass);
+        if (firstDosenId && secondDosenId) return String(firstDosenId) === String(secondDosenId);
+        const firstName = normalizeText(firstClass?.dosen);
+        const secondName = normalizeText(secondClass?.dosen);
+        return Boolean(firstName && secondName && firstName === secondName);
+      };
 
       const getProfileForKelas = async (kelas) => {
         const kelasDosenNidn = normalizeText(kelas?.dosen);
@@ -759,19 +834,249 @@ export default function JadwalPage() {
         return profile;
       };
 
+      const partialPairCandidates = [];
+      if (autoGenSettings.combineTheoryPracticum) {
+        const theories = kelasList.filter((kelas) => !isPracticumName(kelas));
+        const practicums = kelasList.filter((kelas) => isPracticumName(kelas));
+        const usedPartialIds = new Set();
+
+        randomize(theories).forEach((theory) => {
+          const theoryPairingKey = getPairingKey(theory);
+          if (!theoryPairingKey) return;
+
+          const candidates = randomize(practicums.filter((practicum) => (
+            getPairingKey(practicum) === theoryPairingKey &&
+            !usedPartialIds.has(String(practicum.id)) &&
+            sameLecturer(theory, practicum)
+          )));
+
+          const practicum = candidates.find((candidate) => {
+            const theorySchedules = getSchedulesForClass(theory.id);
+            const practicumSchedules = getSchedulesForClass(candidate.id);
+            return (theorySchedules.length === 1 && practicumSchedules.length === 0) ||
+              (theorySchedules.length === 0 && practicumSchedules.length === 1);
+          });
+
+          if (!practicum) return;
+          const theorySchedules = getSchedulesForClass(theory.id);
+          const practicumSchedules = getSchedulesForClass(practicum.id);
+          const existingSchedule = theorySchedules[0] || practicumSchedules[0];
+          partialPairCandidates.push({
+            theory,
+            practicum,
+            existingSchedule,
+            scheduledClass: theorySchedules.length > 0 ? theory : practicum,
+            missingClass: theorySchedules.length > 0 ? practicum : theory,
+          });
+          usedPartialIds.add(String(theory.id));
+          usedPartialIds.add(String(practicum.id));
+        });
+      }
+
+      for (const pair of partialPairCandidates) {
+        const { theory, practicum, existingSchedule, scheduledClass, missingClass } = pair;
+        const theoryProfile = await getProfileForKelas(theory);
+        const practicumProfile = await getProfileForKelas(practicum);
+        const preferredDays = theoryProfile.preferredDays.filter((day) => practicumProfile.preferredDays.includes(day));
+        const allowedDays = autoGenSettings.skipSaturday
+          ? preferredDays.filter((day) => day !== 'Sabtu')
+          : preferredDays;
+        const floors = theoryProfile.preferredFloors.filter((floor) => practicumProfile.preferredFloors.includes(floor));
+        const roomId = existingSchedule.ruangan_id ?? existingSchedule.f_ruangan;
+        const room = ruanganList.find((item) => String(item.id) === String(roomId));
+        const theoryDuration = Number(theory.sks || theory.f_sks_kurikulum || 1) * settings.durasiSlot;
+        const practicumDuration = Number(practicum.sks || practicum.f_sks_kurikulum || 1) * settings.durasiSlot;
+        let adjacentCandidate = null;
+
+        if (
+          allowedDays.includes(existingSchedule.hari) &&
+          room &&
+          floors.includes(getRoomFloor(room)) &&
+          isRoomAllowedForPair(room, practicum)
+        ) {
+          if (String(scheduledClass.id) === String(theory.id)) {
+            const theoryStart = timeToMinutes(existingSchedule.jam_mulai);
+            const theoryEnd = timeToMinutes(existingSchedule.jam_selesai);
+            if (theoryEnd - theoryStart === theoryDuration) {
+              const totalEnd = minutesToTime(theoryEnd + practicumDuration);
+              adjacentCandidate = {
+                hari: existingSchedule.hari,
+                ruangan_id: roomId,
+                jam_mulai: existingSchedule.jam_mulai,
+                theory_end: existingSchedule.jam_selesai,
+                jam_selesai: totalEnd,
+                missingStart: existingSchedule.jam_selesai,
+                missingEnd: totalEnd,
+              };
+            }
+          } else {
+            const practicumStart = timeToMinutes(existingSchedule.jam_mulai);
+            const practicumEnd = timeToMinutes(existingSchedule.jam_selesai);
+            if (practicumEnd - practicumStart === practicumDuration) {
+              const theoryStart = minutesToTime(practicumStart - theoryDuration);
+              const theoryEnd = existingSchedule.jam_mulai;
+              adjacentCandidate = {
+                hari: existingSchedule.hari,
+                ruangan_id: roomId,
+                jam_mulai: theoryStart,
+                theory_end: theoryEnd,
+                jam_selesai: existingSchedule.jam_selesai,
+                missingStart: theoryStart,
+                missingEnd: theoryEnd,
+              };
+            }
+          }
+        }
+
+        const isAdjacentCandidateValid = adjacentCandidate && (
+          timeToMinutes(adjacentCandidate.jam_mulai) >= timeToMinutes(settings.jamMulai) &&
+          timeToMinutes(adjacentCandidate.jam_selesai) <= timeToMinutes(settings.jamSelesai) &&
+          generateTimeSlots(adjacentCandidate.hari).some((slot) => slot.start === adjacentCandidate.jam_mulai) &&
+          !isSessionCutByBreak(
+            adjacentCandidate.hari,
+            adjacentCandidate.jam_mulai,
+            adjacentCandidate.jam_selesai,
+            Number(theory.sks || theory.f_sks_kurikulum || 1) + Number(practicum.sks || practicum.f_sks_kurikulum || 1),
+          ) &&
+          isWindowAvailableForProfile(adjacentCandidate.hari, adjacentCandidate.jam_mulai, adjacentCandidate.jam_selesai, theoryProfile) &&
+          isWindowAvailableForProfile(adjacentCandidate.hari, adjacentCandidate.jam_mulai, adjacentCandidate.jam_selesai, practicumProfile)
+        );
+
+        let merged = false;
+        let relocationNeeded = false;
+        let lastError = '';
+
+        if (isAdjacentCandidateValid) {
+          const { res, result } = await postSchedules({
+            kelas_id: missingClass.id,
+            hari: adjacentCandidate.hari,
+            ruangan_id: adjacentCandidate.ruangan_id,
+            jam_mulai: adjacentCandidate.missingStart,
+            jam_selesai: adjacentCandidate.missingEnd,
+            semester: generationSemester,
+            dosen_id: getDosenIdForKelas(missingClass),
+          });
+
+          if (res.ok && result.data?.id) {
+            updateWorkingSchedule([result.data]);
+            merged = true;
+            partialPairBundles += 1;
+            partialGeneratedSessions += 1;
+            partialPairReports.push(
+              `Kelas ${getKelasName(theory)} dan ${getKelasName(practicum)} dihubungkan di sesi ${adjacentCandidate.jam_mulai}-${adjacentCandidate.jam_selesai} hari ${adjacentCandidate.hari}.`,
+            );
+          } else if (res.status === 409) {
+            relocationNeeded = true;
+            lastError = result.error || 'slot berdampingan sudah terisi';
+          } else {
+            lastError = result.error || 'gagal menyimpan sesi pasangan';
+          }
+        }
+
+        if (!merged && relocationNeeded && existingSchedule.id) {
+          const withoutExisting = {};
+          days.forEach((day) => {
+            withoutExisting[day] = {};
+            Object.entries(workingScheduleData[day] || {}).forEach(([currentRoomId, sessions]) => {
+              const remaining = sessions.filter((session) => String(session.id) !== String(existingSchedule.id));
+              if (remaining.length > 0) withoutExisting[day][currentRoomId] = remaining;
+            });
+          });
+          const candidates = getPairedAutoGenCandidateSlots(
+            theory,
+            practicum,
+            theoryProfile,
+            practicumProfile,
+            generationSemester,
+            withoutExisting,
+          );
+          const attempted = new Set();
+
+          for (const candidate of candidates) {
+            if (attempted.has(candidateKey(candidate))) continue;
+            attempted.add(candidateKey(candidate));
+            const { res, result } = await postSchedules({
+              replace_schedule_ids: [existingSchedule.id],
+              sessions: [
+                {
+                  kelas_id: theory.id,
+                  hari: candidate.hari,
+                  ruangan_id: candidate.ruangan_id,
+                  jam_mulai: candidate.jam_mulai,
+                  jam_selesai: candidate.theory_end,
+                  semester: generationSemester,
+                  dosen_id: getDosenIdForKelas(theory),
+                },
+                {
+                  kelas_id: practicum.id,
+                  hari: candidate.hari,
+                  ruangan_id: candidate.ruangan_id,
+                  jam_mulai: candidate.theory_end,
+                  jam_selesai: candidate.jam_selesai,
+                  semester: generationSemester,
+                  dosen_id: getDosenIdForKelas(practicum),
+                },
+              ],
+            });
+
+            if (res.ok && Array.isArray(result.data) && result.data.length === 2) {
+              updateWorkingSchedule(result.data, [existingSchedule.id]);
+              merged = true;
+              partialPairBundles += 1;
+              partialGeneratedSessions += 2;
+              partialPairReports.push(
+                `Kelas ${getKelasName(scheduledClass)} ditarik karena ditemukan pasangan gabungan.`,
+                `Kelas ${getKelasName(theory)} dan ${getKelasName(practicum)} dihubungkan di sesi ${candidate.jam_mulai}-${candidate.jam_selesai} hari ${candidate.hari}.`,
+              );
+              break;
+            }
+
+            lastError = result.error || 'gagal memindahkan jadwal pasangan';
+            if (res.status !== 409) break;
+          }
+        }
+
+        if (merged) {
+          handledPartialClassIds.add(String(theory.id));
+          handledPartialClassIds.add(String(practicum.id));
+        } else {
+          forceSingleClassIds.add(String(missingClass.id));
+          partialPairReports.push(
+            `Pasangan ${getKelasName(theory)} dan ${getKelasName(practicum)} tidak dapat digabungkan${lastError ? `: ${lastError}` : ''}. Jadwal yang sudah ada dipertahankan.`,
+          );
+        }
+      }
+
+      emptyKelas = emptyKelas.filter((kelas) => !handledPartialClassIds.has(String(kelas.id)));
+      if (emptyKelas.length === 0) {
+        showMessage(
+          'success',
+          partialPairReports.length > 0
+            ? `Hasil generate jadwal:\n\n✅ Sesi berhasil: ${partialGeneratedSessions}\n- Pasangan teori+praktikum: ${partialPairBundles}\n\n${partialPairReports.join('\n')}`
+            : 'Tidak ada kelas yang perlu di-generate',
+        );
+        setShowAutoGenModal(false);
+        await fetchData();
+        return;
+      }
+
       const buildScheduleUnits = () => {
         if (!autoGenSettings.combineTheoryPracticum) {
           return emptyKelas.map((kelas) => ({ type: 'single', kelas }));
         }
 
-        const praktikumByBase = {};
+        const praktikumByCurriculumAndBase = new Map();
         const theoryClasses = [];
         const practicumClasses = [];
+
         emptyKelas.forEach((kelas) => {
           if (isPracticumName(kelas)) {
-            const base = getBaseCourseName(kelas);
-            if (!praktikumByBase[base]) praktikumByBase[base] = [];
-            praktikumByBase[base].push(kelas);
+            const pairingKey = getPairingKey(kelas);
+            if (pairingKey !== null) {
+              const candidates = praktikumByCurriculumAndBase.get(pairingKey) || [];
+              candidates.push(kelas);
+              praktikumByCurriculumAndBase.set(pairingKey, candidates);
+            }
             practicumClasses.push(kelas);
           } else {
             theoryClasses.push(kelas);
@@ -782,12 +1087,20 @@ export default function JadwalPage() {
         const units = [];
 
         randomize(theoryClasses).forEach((kelas) => {
-          const base = getBaseCourseName(kelas);
-          const candidates = praktikumByBase[base] || [];
+          if (forceSingleClassIds.has(String(kelas.id))) {
+            units.push({ type: 'single', kelas });
+            usedIds.add(kelas.id);
+            return;
+          }
+
+          const pairingKey = getPairingKey(kelas);
+          const candidates = pairingKey === null
+            ? []
+            : praktikumByCurriculumAndBase.get(pairingKey) || [];
           const theoryDosen = normalizeText(kelas.dosen);
           const theoryDosenId = getDosenIdForKelas(kelas);
           const practicumPair = candidates
-            .filter((item) => !usedIds.has(item.id))
+            .filter((item) => !usedIds.has(item.id) && !forceSingleClassIds.has(String(item.id)))
             .sort((a, b) => {
               const aSameDosen = (theoryDosenId && theoryDosenId === getDosenIdForKelas(a)) || (theoryDosen && theoryDosen === normalizeText(a.dosen)) ? 0 : 1;
               const bSameDosen = (theoryDosenId && theoryDosenId === getDosenIdForKelas(b)) || (theoryDosen && theoryDosen === normalizeText(b.dosen)) ? 0 : 1;
@@ -819,11 +1132,15 @@ export default function JadwalPage() {
       const defaultUnits = [];
 
       for (const unit of scheduleUnits) {
-        const anchorKelas = unit.type === 'pair' ? unit.theory : unit.kelas;
-        const profile = await getProfileForKelas(anchorKelas);
-        const nextUnit = { ...unit, profile };
+        const theoryProfile = unit.type === 'pair' ? await getProfileForKelas(unit.theory) : null;
+        const practicumProfile = unit.type === 'pair' ? await getProfileForKelas(unit.practicum) : null;
+        const profile = unit.type === 'pair' ? null : await getProfileForKelas(unit.kelas);
+        const nextUnit = { ...unit, profile, theoryProfile, practicumProfile };
+        const hasCustomProfile = unit.type === 'pair'
+          ? theoryProfile.isCustom || practicumProfile.isCustom
+          : profile.isCustom;
 
-        if (profile.isCustom) {
+        if (hasCustomProfile) {
           customFirstUnits.push(nextUnit);
         } else {
           defaultUnits.push(nextUnit);
@@ -831,6 +1148,132 @@ export default function JadwalPage() {
       }
 
       const orderedUnits = [...shuffleArray(customFirstUnits), ...shuffleArray(defaultUnits)];
+      const candidatesForUnit = (unit, scheduleData) => (
+        unit.type === 'pair'
+          ? getPairedAutoGenCandidateSlots(
+            unit.theory,
+            unit.practicum,
+            unit.theoryProfile,
+            unit.practicumProfile,
+            generationSemester,
+            scheduleData,
+          )
+          : getAutoGenCandidateSlots(unit.kelas, unit.profile, generationSemester, scheduleData)
+      );
+      const sessionsForCandidate = (unit, candidate) => {
+        if (unit.type === 'pair') {
+          return [
+            {
+              hari: candidate.hari,
+              ruangan_id: candidate.ruangan_id,
+              dosen_id: getDosenIdForKelas(unit.theory),
+              jam_mulai: candidate.jam_mulai,
+              jam_selesai: candidate.theory_end,
+            },
+            {
+              hari: candidate.hari,
+              ruangan_id: candidate.ruangan_id,
+              dosen_id: getDosenIdForKelas(unit.practicum),
+              jam_mulai: candidate.theory_end,
+              jam_selesai: candidate.jam_selesai,
+            },
+          ];
+        }
+
+        return [{
+          hari: candidate.hari,
+          ruangan_id: candidate.ruangan_id,
+          dosen_id: getDosenIdForKelas(unit.kelas),
+          jam_mulai: candidate.jam_mulai,
+          jam_selesai: candidate.jam_selesai,
+        }];
+      };
+      const planningDomains = orderedUnits.map((unit, index) => ({
+        unit,
+        index,
+        candidates: candidatesForUnit(unit, jadwalData),
+      })).sort((first, second) => first.candidates.length - second.candidates.length);
+      const domainByIndex = new Map(planningDomains.map((domain) => [domain.index, domain]));
+      const planningClassCount = orderedUnits.reduce(
+        (total, unit) => total + (unit.type === 'pair' ? 2 : 1),
+        0,
+      );
+      const remainingClassCounts = Array(planningDomains.length + 1).fill(0);
+      for (let index = planningDomains.length - 1; index >= 0; index -= 1) {
+        remainingClassCounts[index] = remainingClassCounts[index + 1] +
+          (planningDomains[index].unit.type === 'pair' ? 2 : 1);
+      }
+      const plannedAssignments = new Map();
+      const currentAssignments = [];
+      let bestAssignments = new Map();
+      let bestScheduledCount = -1;
+      let exploredNodes = 0;
+      const maxPlanningNodes = 25000;
+
+      const conflictsWithPlan = (unit, candidate) => {
+        const candidateSessions = sessionsForCandidate(unit, candidate);
+        return currentAssignments.some((assignment) => (
+          candidateSessions.some((candidateSession) => (
+            assignment.sessions.some((assignedSession) => {
+              if (candidateSession.hari !== assignedSession.hari) return false;
+              const overlaps = timeToMinutes(candidateSession.jam_mulai) < timeToMinutes(assignedSession.jam_selesai) &&
+                timeToMinutes(candidateSession.jam_selesai) > timeToMinutes(assignedSession.jam_mulai);
+              if (!overlaps) return false;
+              const sameRoom = String(candidateSession.ruangan_id) === String(assignedSession.ruangan_id);
+              const sameLecturer = candidateSession.dosen_id && assignedSession.dosen_id &&
+                String(candidateSession.dosen_id) === String(assignedSession.dosen_id);
+              return sameRoom || sameLecturer;
+            })
+          ))
+        ));
+      };
+
+      const searchSchedulePlan = (depth, scheduledCount) => {
+        if (exploredNodes >= maxPlanningNodes) return;
+        if (scheduledCount + remainingClassCounts[depth] <= bestScheduledCount) return;
+        if (scheduledCount > bestScheduledCount) {
+          bestScheduledCount = scheduledCount;
+          bestAssignments = new Map(plannedAssignments);
+        }
+        if (depth === planningDomains.length) {
+          return;
+        }
+
+        const { unit, index, candidates } = planningDomains[depth];
+        const unitClassCount = unit.type === 'pair' ? 2 : 1;
+        for (const candidate of candidates) {
+          exploredNodes += 1;
+          if (exploredNodes > maxPlanningNodes) return;
+          if (conflictsWithPlan(unit, candidate)) continue;
+
+          plannedAssignments.set(index, candidate);
+          currentAssignments.push({ sessions: sessionsForCandidate(unit, candidate) });
+          searchSchedulePlan(depth + 1, scheduledCount + unitClassCount);
+          currentAssignments.pop();
+          plannedAssignments.delete(index);
+          if (bestScheduledCount === planningClassCount) return;
+          if (exploredNodes >= maxPlanningNodes) return;
+        }
+
+        exploredNodes += 1;
+        searchSchedulePlan(depth + 1, scheduledCount);
+      };
+
+      searchSchedulePlan(0, 0);
+      const schedulePlans = new Map();
+      orderedUnits.forEach((unit, index) => {
+        const domain = domainByIndex.get(index);
+        const preferredCandidate = bestAssignments.get(index);
+        const candidates = domain ? [...domain.candidates] : [];
+        if (preferredCandidate) {
+          candidates.sort((first, second) => (
+            candidateKey(first) === candidateKey(preferredCandidate) ? -1
+              : candidateKey(second) === candidateKey(preferredCandidate) ? 1
+                : 0
+          ));
+        }
+        schedulePlans.set(unit, candidates);
+      });
       let generated = 0;
       let generatedSingleClasses = 0;
       let generatedPairBundles = 0;
@@ -838,120 +1281,161 @@ export default function JadwalPage() {
       let skippedSaturdayOnlyPreference = 0;
       let skippedApiFailure = 0;
       const skippedDetails = [];
+      const planningCoverage = bestScheduledCount;
+      const planningLimitReached = exploredNodes >= maxPlanningNodes;
 
       for (const unit of orderedUnits) {
-        const preferredDays = Array.isArray(unit.profile?.preferredDays) ? unit.profile.preferredDays : days;
-        const hasNonSaturdayPreferredDay = preferredDays.some((day) => day !== 'Sabtu');
+        const profiles = unit.type === 'pair'
+          ? [unit.theoryProfile, unit.practicumProfile]
+          : [unit.profile];
+        const preferredDays = unit.type === 'pair'
+          ? unit.theoryProfile.preferredDays.filter((day) => unit.practicumProfile.preferredDays.includes(day))
+          : (Array.isArray(unit.profile?.preferredDays) ? unit.profile.preferredDays : days);
+        const allowedDays = autoGenSettings.skipSaturday
+          ? preferredDays.filter((day) => day !== 'Sabtu')
+          : preferredDays;
         const classCount = unit.type === 'pair' ? 2 : 1;
+        const anchorKelas = unit.type === 'pair' ? unit.theory : unit.kelas;
 
-        if (autoGenSettings.skipSaturday && unit.profile?.isCustom && !hasNonSaturdayPreferredDay) {
+        if (
+          autoGenSettings.skipSaturday &&
+          profiles.some((profile) => profile.isCustom) &&
+          preferredDays.length > 0 &&
+          allowedDays.length === 0
+        ) {
           skippedSaturdayOnlyPreference += classCount;
           skippedDetails.push(`${getKelasName(anchorKelas)}: preferensi hanya Sabtu`);
           continue;
         }
 
         if (unit.type === 'pair') {
-          const candidates = getPairedAutoGenCandidateSlots(unit.theory, unit.practicum, unit.profile, generationSemester);
+          let candidates = schedulePlans.get(unit) || [];
           if (candidates.length === 0) {
             skippedNoCandidate += classCount;
-            skippedDetails.push(`${getKelasName(unit.theory)} + ${getKelasName(unit.practicum)}: tidak ada slot cocok`);
+            skippedDetails.push(`${getKelasName(unit.theory)} + ${getKelasName(unit.practicum)}: tidak ditemukan slot yang kompatibel dengan rencana jadwal`);
             continue;
           }
 
-          const candidate = candidates[0];
-          const theoryPayload = {
-            kelas_id: unit.theory.id,
-            hari: candidate.hari,
-            ruangan_id: candidate.ruangan_id,
-            jam_mulai: candidate.jam_mulai,
-            jam_selesai: candidate.theory_end,
-            display_name: unit.theory.display_name || unit.theory.nama_kelas,
-            semester: generationSemester,
-            dosen_id: getDosenIdForKelas(unit.theory),
-          };
+          const attemptedCandidates = new Set();
+          let pairSaved = false;
+          let pairError = '';
 
-          const practicumPayload = {
-            kelas_id: unit.practicum.id,
-            hari: candidate.hari,
-            ruangan_id: candidate.ruangan_id,
-            jam_mulai: candidate.theory_end,
-            jam_selesai: candidate.jam_selesai,
-            display_name: unit.practicum.display_name || unit.practicum.nama_kelas,
-            semester: generationSemester,
-            dosen_id: getDosenIdForKelas(unit.practicum),
-          };
+          while (candidates.length > 0) {
+            const candidate = candidates.find((item) => !attemptedCandidates.has(candidateKey(item)));
+            if (!candidate) break;
+            attemptedCandidates.add(candidateKey(candidate));
 
-          const theoryRes = await fetch('/api/jadwal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(theoryPayload),
-          });
+            const { res, result } = await postSchedules({
+              sessions: [
+                {
+                  kelas_id: unit.theory.id,
+                  hari: candidate.hari,
+                  ruangan_id: candidate.ruangan_id,
+                  jam_mulai: candidate.jam_mulai,
+                  jam_selesai: candidate.theory_end,
+                  display_name: unit.theory.display_name || unit.theory.nama_kelas,
+                  semester: generationSemester,
+                  dosen_id: getDosenIdForKelas(unit.theory),
+                },
+                {
+                  kelas_id: unit.practicum.id,
+                  hari: candidate.hari,
+                  ruangan_id: candidate.ruangan_id,
+                  jam_mulai: candidate.theory_end,
+                  jam_selesai: candidate.jam_selesai,
+                  display_name: unit.practicum.display_name || unit.practicum.nama_kelas,
+                  semester: generationSemester,
+                  dosen_id: getDosenIdForKelas(unit.practicum),
+                },
+              ],
+            });
 
-          if (!theoryRes.ok) {
+            if (res.ok) {
+              if (!Array.isArray(result.data) || result.data.length !== 2) {
+                throw new Error('Server tidak mengembalikan data pasangan jadwal yang lengkap');
+              }
+              updateWorkingSchedule(result.data);
+              pairSaved = true;
+              break;
+            }
+
+            pairError = result.error || 'gagal menyimpan pasangan jadwal';
+            if (res.status !== 409) break;
+            candidates = getPairedAutoGenCandidateSlots(
+              unit.theory,
+              unit.practicum,
+              unit.theoryProfile,
+              unit.practicumProfile,
+              generationSemester,
+              workingScheduleData,
+            );
+          }
+
+          if (pairSaved) {
+            generated += 2;
+            generatedPairBundles += 1;
+          } else {
             skippedApiFailure += classCount;
-            const error = await theoryRes.json().catch(() => ({}));
-            skippedDetails.push(`${getKelasName(unit.theory)} + ${getKelasName(unit.practicum)}: ${error.error || 'gagal menyimpan teori'}`);
-            continue;
+            skippedDetails.push(`${getKelasName(unit.theory)} + ${getKelasName(unit.practicum)}: ${pairError || 'semua kandidat ditolak server'}`);
           }
-
-          const practicumRes = await fetch('/api/jadwal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(practicumPayload),
-          });
-
-          if (!practicumRes.ok) {
-            skippedApiFailure += classCount;
-            const error = await practicumRes.json().catch(() => ({}));
-            skippedDetails.push(`${getKelasName(unit.theory)} + ${getKelasName(unit.practicum)}: ${error.error || 'gagal menyimpan praktikum'}`);
-            continue;
-          }
-
-          generated += 2;
-          generatedPairBundles += 1;
           continue;
         }
 
         const kelas = unit.kelas;
-        const candidates = getAutoGenCandidateSlots(kelas, unit.profile, generationSemester);
+        let candidates = schedulePlans.get(unit) || [];
         if (candidates.length === 0) {
           skippedNoCandidate += classCount;
-          skippedDetails.push(`${getKelasName(kelas)}: tidak ada slot cocok`);
+          skippedDetails.push(`${getKelasName(kelas)}: tidak ditemukan slot yang kompatibel dengan rencana jadwal`);
           continue;
         }
 
-        const candidate = candidates[0];
-        const jadwalPayload = {
-          kelas_id: kelas.id,
-          hari: candidate.hari,
-          ruangan_id: candidate.ruangan_id,
-          jam_mulai: candidate.jam_mulai,
-          jam_selesai: candidate.jam_selesai,
-          display_name: kelas.display_name || kelas.nama_kelas,
-          semester: generationSemester,
-          dosen_id: getDosenIdForKelas(kelas),
-        };
+        const attemptedCandidates = new Set();
+        let singleSaved = false;
+        let singleError = '';
 
-        const res = await fetch('/api/jadwal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(jadwalPayload),
-        });
+        while (candidates.length > 0) {
+          const candidate = candidates.find((item) => !attemptedCandidates.has(candidateKey(item)));
+          if (!candidate) break;
+          attemptedCandidates.add(candidateKey(candidate));
 
-        if (res.ok) {
+          const { res, result } = await postSchedules({
+            kelas_id: kelas.id,
+            hari: candidate.hari,
+            ruangan_id: candidate.ruangan_id,
+            jam_mulai: candidate.jam_mulai,
+            jam_selesai: candidate.jam_selesai,
+            display_name: kelas.display_name || kelas.nama_kelas,
+            semester: generationSemester,
+            dosen_id: getDosenIdForKelas(kelas),
+          });
+
+          if (res.ok) {
+            if (!result.data?.id) {
+              throw new Error('Server tidak mengembalikan data jadwal yang tersimpan');
+            }
+            updateWorkingSchedule([result.data]);
+            singleSaved = true;
+            break;
+          }
+
+          singleError = result.error || 'gagal menyimpan ke server';
+          if (res.status !== 409) break;
+          candidates = getAutoGenCandidateSlots(kelas, unit.profile, generationSemester, workingScheduleData);
+        }
+
+        if (singleSaved) {
           generated += 1;
           generatedSingleClasses += 1;
         } else {
           skippedApiFailure += classCount;
-          const error = await res.json().catch(() => ({}));
-          skippedDetails.push(`${getKelasName(kelas)}: ${error.error || 'gagal menyimpan ke server'}`);
+          skippedDetails.push(`${getKelasName(kelas)}: ${singleError || 'semua kandidat ditolak server'}`);
         }
       }
 
       const totalSkipped = skippedNoCandidate + skippedSaturdayOnlyPreference + skippedApiFailure;
       showMessage(
         'success',
-        `Hasil generate jadwal:\n\n✅ Sesi berhasil: ${generated}\n- Kelas single: ${generatedSingleClasses}\n- Pasangan teori+praktikum: ${generatedPairBundles} pasangan (${generatedPairBundles * 2} sesi)\n\n⏭️ Kelas dilewati: ${totalSkipped}\n- Tidak ada slot cocok: ${skippedNoCandidate}\n- Preferensi hanya Sabtu (filter Sabtu aktif): ${skippedSaturdayOnlyPreference}\n- Gagal simpan ke server: ${skippedApiFailure}${skippedDetails.length ? `\n\nDetail:\n- ${skippedDetails.join('\n- ')}` : ''}`
+        `Hasil generate jadwal:\n\n🧭 Perencanaan: ${planningCoverage}/${emptyKelas.length} kelas direncanakan${planningLimitReached ? ' (batas pencarian tercapai; belum tentu solusi maksimal)' : ''}\n✅ Sesi berhasil: ${generated + partialGeneratedSessions}\n- Kelas single: ${generatedSingleClasses}\n- Pasangan teori+praktikum: ${generatedPairBundles + partialPairBundles} pasangan (${generatedPairBundles * 2 + partialGeneratedSessions} sesi dibuat)\n\n⏭️ Kelas dilewati: ${totalSkipped}\n- Tidak ada slot cocok: ${skippedNoCandidate}\n- Preferensi hanya Sabtu (filter Sabtu aktif): ${skippedSaturdayOnlyPreference}\n- Gagal simpan ke server: ${skippedApiFailure}${partialPairReports.length ? `\n\nPasangan dari kelas yang sudah terjadwal:\n- ${partialPairReports.join('\n- ')}` : ''}${skippedDetails.length ? `\n\nDetail:\n- ${skippedDetails.join('\n- ')}` : ''}`
       );
       setShowAutoGenModal(false);
       await fetchData();
